@@ -240,20 +240,14 @@ export const presentationData = {
           images: [createImagePlaceholder("Startup incubation funnel"), createImagePlaceholder("Samsung Mobile Advance timeline")]
         },
         {
-          id: "competency-feedback",
-          title: "Competency Assessment & Mid-Year Feedback",
-          layout: "process",
+          id: "open-innovation-placeholder",
+          title: "Open Innovation Image Placeholder",
+          layout: "image-grid",
           visible: true,
-          fullSlide: true,
-          text: "ADD_TEXT_FROM_IMAGE_AS_IS",
-          bullets: [
-            "competency assessment",
-            "mid-year feedback",
-            "meal card usage window change",
-            "access for greater flexibility",
-            "team / POC information if visible"
-          ],
-          images: [createImagePlaceholder("Competency update"), createImagePlaceholder("Meal card usage window change")]
+          fullSlide: false,
+          text: "ADD_OPEN_INNOVATION_IMAGE_OR_UPDATE_HERE",
+          bullets: [],
+          images: [createImagePlaceholder("Open Innovation image placeholder")]
         }
       ]
     },
@@ -332,16 +326,93 @@ export const presentationData = {
       groupName: "People Group",
       title: "People Group",
       theme: "green",
-      sections: ["Overview", "Key Updates", "People Initiatives", "Business Impact", "Hall of Fame", "Fast Forward to 2nd Half", "Image Placeholder"].map((title) => ({
-        id: `people-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
-        title,
-        layout: title.includes("Image") ? "image-grid" : "placeholder",
-        visible: true,
-        fullSlide: title === "Overview",
-        text: "ADD_PEOPLE_GROUP_TEXT_HERE",
-        bullets: [],
-        images: title.includes("Image") ? [createImagePlaceholder("Image Placeholder")] : []
-      }))
+      sections: [
+        {
+          id: "people-overview",
+          title: "People Group Overview",
+          layout: "bento",
+          visible: true,
+          fullSlide: true,
+          text: "People Group",
+          bullets: [
+            "Competency Assessment & Mid-Year Feedback 2026",
+            "Enabling Meaningful Development Conversations",
+            "SRIB SSL2026",
+            "Extending Meal Card Access for Greater Flexibility"
+          ],
+          images: [createImagePlaceholder("People Group overview image")]
+        },
+        {
+          id: "people-competency-feedback",
+          title: "Competency Assessment & Mid-Year Feedback 2026",
+          layout: "process",
+          visible: true,
+          fullSlide: true,
+          text: "Enabling Meaningful Development Conversations",
+          bullets: [
+            "Alignment of Competency Assessment timelines with mid-year feedback process",
+            "Enable managers to share competency based developmental feedback alongside discussions on mid year goal progress & convert feedback into IDP's",
+            "Access CS WF via SRI-B Hub-> Workflows-> Pending OR Access your email inbox",
+            "Access Mid-Year Feedback on Workday",
+            "CA SELF ASSESSMENT BY JUNE 26 (FRI)",
+            "CA 1ST MANAGER ASSESSMENT BY JULY 03 (FRI)",
+            "CA 2ND MANAGER ASSESSMENT BY JULY 10 (FRI)",
+            "MID YEAR FEEDBACK BY JULY 31 (FRI)",
+            "Competency Assessment Rating Definition: LEVEL 1 DOESN'T MEET, LEVEL 2 MEETS SOME, LEVEL 3 MEETS, LEVEL 4 EXCEEDS SOME, LEVEL 5 EXCEEDS MOST",
+            "CA will continue to be one of the factors towards promotion eligibility in the PCR Framework."
+          ],
+          images: [createImagePlaceholder("Competency Assessment timeline image"), createImagePlaceholder("Competency rating definition image")]
+        },
+        {
+          id: "people-srib-ssl2026",
+          title: "SRIB SSL2026",
+          layout: "text-cards",
+          visible: true,
+          fullSlide: true,
+          text: "ARST & CST have created synergy by joining forces for SRIB SSL2026",
+          bullets: [
+            "Team Name: Research Communication Blasters",
+            "POC: Rohan Mahala",
+            "Cricket (Women)",
+            "Cricket (Men)",
+            "Carrom",
+            "Volleyball",
+            "Chess",
+            "Throwball (Women)",
+            "Badminton (Men)",
+            "Badminton (Women)",
+            "eSports",
+            "Table Tennis (Men)"
+          ],
+          images: [createImagePlaceholder("SRIB SSL2026 sports table image")]
+        },
+        {
+          id: "people-meal-card",
+          title: "Extending Meal Card Access for Greater Flexibility",
+          layout: "metrics",
+          visible: true,
+          fullSlide: true,
+          text: "What's Changing?",
+          bullets: [
+            "Meal Card Usage Window",
+            "Existing Days: Monday to Friday",
+            "Revised Days: Monday to Saturday",
+            "Existing Timings: 8:00 AM to 7:00 PM",
+            "Revised Timings: No time restriction"
+          ],
+          images: [createImagePlaceholder("Meal Card Usage Window image")]
+        },
+        {
+          id: "people-image-placeholder",
+          title: "Image Placeholder",
+          layout: "image-grid",
+          visible: true,
+          fullSlide: false,
+          text: "",
+          bullets: [],
+          images: [createImagePlaceholder("People Group image placeholder"), createImagePlaceholder("Additional People Group image placeholder")]
+        }
+      ]
     },
     {
       id: "snack-break",

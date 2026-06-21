@@ -4,11 +4,34 @@ import { presentationData } from "../data/presentationData";
 
 const STORAGE_KEY = "ahm-premium-presentation-data";
 
+function migratePeopleGroupContent(data) {
+  const copy = cloneData(data);
+  const defaults = cloneData(presentationData);
+  const defaultPeople = defaults.slides.find((slide) => slide.id === "people-group");
+  const defaultOpenInnovation = defaults.slides.find((slide) => slide.id === "open-innovation");
+  const openInnovation = copy.slides?.find((slide) => slide.id === "open-innovation");
+  const peopleGroup = copy.slides?.find((slide) => slide.id === "people-group");
+
+  if (openInnovation?.sections) {
+    openInnovation.sections = openInnovation.sections.filter((section) => section.id !== "competency-feedback" && section.title !== "Competency Assessment & Mid-Year Feedback");
+    if (defaultOpenInnovation && !openInnovation.sections.some((section) => section.id === "open-innovation-placeholder")) {
+      const placeholder = defaultOpenInnovation.sections.find((section) => section.id === "open-innovation-placeholder");
+      if (placeholder) openInnovation.sections.push(cloneData(placeholder));
+    }
+  }
+
+  if (peopleGroup && defaultPeople && !peopleGroup.sections?.some((section) => section.id === "people-competency-feedback")) {
+    peopleGroup.sections = cloneData(defaultPeople.sections);
+  }
+
+  return copy;
+}
+
 export function usePresentationData() {
   const [data, setData] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : cloneData(presentationData);
+      return saved ? migratePeopleGroupContent(JSON.parse(saved)) : cloneData(presentationData);
     } catch {
       return cloneData(presentationData);
     }
