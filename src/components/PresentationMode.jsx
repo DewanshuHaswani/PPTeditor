@@ -11,6 +11,16 @@ export function PresentationMode({ data }) {
   const [index, setIndex] = useState(0);
   const [movieModeOpen, setMovieModeOpen] = useState(false);
   const current = slides[Math.min(index, slides.length - 1)] || slides[0];
+  const movieGroupTargets = useMemo(
+    () =>
+      Object.fromEntries(
+        ["advance-research-group", "open-innovation", "standards-research-group", "ip-group", "people-group"].map((groupId) => {
+          const targetIndex = slides.findIndex((slide) => slide.originalSlideId === groupId || slide.id === groupId || slide.id.startsWith(`${groupId}__`));
+          return [groupId, targetIndex >= 0 ? targetIndex + 1 : null];
+        })
+      ),
+    [slides]
+  );
 
   const next = () => setIndex((value) => Math.min(value + 1, slides.length - 1));
   const previous = () => setIndex((value) => Math.max(value - 1, 0));
@@ -67,7 +77,7 @@ export function PresentationMode({ data }) {
           </GlassButton>
         </div>
       </div>
-      {movieModeOpen ? <MovieModeOverlay onClose={() => setMovieModeOpen(false)} onSelectGroup={jumpToGroup} /> : null}
+      {movieModeOpen ? <MovieModeOverlay onClose={() => setMovieModeOpen(false)} onSelectGroup={jumpToGroup} groupTargets={movieGroupTargets} /> : null}
     </main>
   );
 }

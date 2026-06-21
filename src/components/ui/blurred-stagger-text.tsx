@@ -41,11 +41,17 @@ export const BlurredStagger = ({
   };
 
   return (
-    <div className={className}>
-      <motion.span variants={container} initial="hidden" animate="show" className={cn("block text-base", textClassName)} aria-label={headingText}>
+    <div className={cn("min-w-0 max-w-full", className)}>
+      <motion.span
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className={cn("block max-w-full whitespace-normal break-words text-base [overflow-wrap:anywhere]", textClassName)}
+        aria-label={headingText}
+      >
         {headingText.split("").map((char, index) => (
           <motion.span key={`${char}-${index}`} variants={letterAnimation} transition={{ duration }} aria-hidden="true">
-            {char === " " ? "\u00A0" : char}
+            {char}
           </motion.span>
         ))}
       </motion.span>

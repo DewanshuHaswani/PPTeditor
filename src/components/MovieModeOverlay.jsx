@@ -41,7 +41,12 @@ const groupCards = [
   }
 ];
 
-export function MovieModeOverlay({ onClose, onSelectGroup }) {
+export function MovieModeOverlay({ onClose, onSelectGroup, groupTargets = {} }) {
+  const cards = groupCards.map((card) => ({
+    ...card,
+    slideNumber: groupTargets[card.id]
+  }));
+
   const handleSelectGroup = (groupId) => {
     onSelectGroup(groupId);
     onClose();
@@ -57,15 +62,15 @@ export function MovieModeOverlay({ onClose, onSelectGroup }) {
   return (
     <div className="fixed inset-0 z-50 bg-black">
       <StellarCardGallerySingle
-        cards={groupCards}
         title="Movie Mode"
-        subtitle="Drag to explore - Scroll to zoom - Click a group card to enter that section"
+        subtitle="Drag to explore - Scroll to zoom - Click a group card, then press Enter Section"
+        cards={cards}
         onSelect={(card) => {
           handleSelectGroup(card.id);
         }}
       />
       <div className="sr-only" aria-label="Movie Mode quick navigation">
-        {groupCards.map((card) => (
+        {cards.map((card) => (
           <button key={card.id} type="button" data-movie-target={card.id} onClick={() => handleSelectGroup(card.id)}>
             Enter {card.title}
           </button>

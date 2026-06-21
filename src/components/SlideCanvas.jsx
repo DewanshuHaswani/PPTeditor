@@ -35,7 +35,7 @@ function TitleBreath({ text, size = 76, className = "", minWeight = 220, maxWeig
 
 function StaggerText({ text, className = "", textClassName = "", stagger = 0.012 }) {
   if (!text) return null;
-  return <BlurredStagger text={text} stagger={stagger} className={className} textClassName={textClassName} />;
+  return <BlurredStagger text={text} stagger={stagger} className={`min-w-0 max-w-full ${className}`} textClassName={`max-w-full break-words [overflow-wrap:anywhere] ${textClassName}`} />;
 }
 
 function HeroTitle({ slide }) {
@@ -60,7 +60,7 @@ function HeroTitle({ slide }) {
             morphTime={1}
             cooldownTime={0.45}
             className="h-24 font-black"
-            textClassName="w-full whitespace-nowrap text-[clamp(1.8rem,4.2vw,4.25rem)] leading-none text-white"
+            textClassName="w-full whitespace-nowrap text-[clamp(1.6rem,3.4vw,3.3rem)] leading-none text-white"
           />
         </motion.div>
       ) : null}
@@ -75,8 +75,8 @@ function HeroTitle({ slide }) {
 
 function QuoteSlide({ slide }) {
   return (
-    <LiquidGlassCard draggable={false} borderRadius="42px" glowIntensity="md" shadowIntensity="sm" className="mx-auto flex min-h-[60vh] w-full max-w-5xl items-center justify-center border border-white/18 bg-white/14 p-12 text-center shadow-glow">
-      <StaggerText text={slide.body} textClassName="text-balance text-4xl font-black leading-tight text-white md:text-6xl" stagger={0.006} />
+    <LiquidGlassCard draggable={false} borderRadius="42px" glowIntensity="md" shadowIntensity="sm" className="mx-auto flex min-h-[60vh] w-full max-w-5xl items-center justify-center overflow-hidden border border-white/18 bg-white/14 p-10 text-center shadow-glow md:p-12">
+      <StaggerText text={slide.body} textClassName="mx-auto max-w-4xl text-balance text-3xl font-black leading-tight text-white md:text-5xl xl:text-6xl" stagger={0.006} />
     </LiquidGlassCard>
   );
 }
@@ -135,9 +135,9 @@ function GroupOrActivity({ slide }) {
   const section = sections[0];
   return (
     <div className="w-full">
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-5">
         <div>
-          <div className="mb-3 inline-flex rounded-full border border-white/16 bg-white/12 px-4 py-2 text-sm font-bold uppercase tracking-[0.24em] text-white/66">
+          <div className="mb-3 inline-flex max-w-full rounded-full border border-white/16 bg-white/12 px-4 py-2 text-sm font-bold uppercase tracking-[0.24em] text-white/66">
             <StaggerText text={slide.subtitle || slide.groupName || slide.type} textClassName="text-sm font-bold uppercase tracking-[0.24em] text-white/66" />
           </div>
           <TitleBreath text={slide.title} size={64} />
@@ -172,7 +172,7 @@ export function SlideCanvas({ slide, data, preview = false }) {
         animate="animate"
         exit="exit"
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        className={`relative z-10 flex min-h-screen items-center justify-center px-7 py-20 ${preview ? "scale-[0.72] origin-center" : ""}`}
+        className={`relative z-10 flex min-h-screen items-center justify-center overflow-hidden px-7 py-14 ${preview ? "scale-[0.72] origin-center" : ""}`}
       >
         <div className="w-full max-w-[1400px]">
           {slide.type === "intro" || slide.type === "title" ? <HeroTitle slide={slide} /> : null}

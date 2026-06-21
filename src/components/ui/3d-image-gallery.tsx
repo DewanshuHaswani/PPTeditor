@@ -13,6 +13,7 @@ export type GalleryCard = {
   alt: string;
   title: string;
   subtitle?: string;
+  slideNumber?: number | null;
 };
 
 type CardContextType = {
@@ -240,7 +241,8 @@ function CardModal() {
             </div>
 
             <h3 className="mb-2 text-center text-lg font-semibold text-white">{selectedCard.title}</h3>
-            {selectedCard.subtitle ? <p className="mb-4 text-center text-sm text-white/60">{selectedCard.subtitle}</p> : null}
+            {selectedCard.subtitle ? <p className="mb-2 text-center text-sm text-white/60">{selectedCard.subtitle}</p> : null}
+            {selectedCard.slideNumber ? <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.18em] text-[#31b8c6]">Slide {selectedCard.slideNumber}</p> : null}
 
             <div className="flex gap-2">
               <button
@@ -251,7 +253,7 @@ function CardModal() {
               >
                 <div className="flex items-center gap-1.5">
                   <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
-                  <span>Enter Section</span>
+                  <span>{selectedCard.slideNumber ? `Enter Slide ${selectedCard.slideNumber}` : "Enter Section"}</span>
                 </div>
               </button>
               <button

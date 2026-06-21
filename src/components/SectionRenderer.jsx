@@ -24,7 +24,7 @@ function Rise({ children, index = 0, className = "" }) {
       initial={{ opacity: 0, y: 34, scale: 0.96, filter: "blur(14px)" }}
       animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
       transition={{ ...riseTransition, delay: index * 0.06 }}
-      className={className}
+      className={`min-w-0 ${className}`}
     >
       {children}
     </motion.div>
@@ -33,20 +33,21 @@ function Rise({ children, index = 0, className = "" }) {
 
 function RevealCopy({ text, className = "", stagger = 0.01 }) {
   if (!text) return null;
+  const safeClassName = `min-w-0 max-w-full break-words [overflow-wrap:anywhere] ${className}`;
   if (String(text).length > 220) {
     return (
-      <motion.p initial={{ opacity: 0, y: 18, filter: "blur(10px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={riseTransition} className={className}>
+      <motion.p initial={{ opacity: 0, y: 18, filter: "blur(10px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={riseTransition} className={safeClassName}>
         {text}
       </motion.p>
     );
   }
-  return <BlurredStagger text={String(text)} stagger={stagger} textClassName={className} />;
+  return <BlurredStagger text={String(text)} stagger={stagger} textClassName={safeClassName} />;
 }
 
 function Placeholder({ caption }) {
   return (
     <Rise>
-      <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="none" shadowIntensity="xs" className="flex min-h-44 flex-col items-center justify-center border border-dashed border-white/30 bg-white/10 p-6 text-center text-white/70">
+      <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="none" shadowIntensity="xs" className="flex min-h-44 min-w-0 flex-col items-center justify-center overflow-hidden border border-dashed border-white/30 bg-white/10 p-6 text-center text-white/70">
         <ImageIcon className="mb-3 h-9 w-9" />
         <RevealCopy text={caption || "Image Placeholder"} className="text-sm font-semibold" />
       </LiquidGlassCard>
@@ -57,7 +58,7 @@ function Placeholder({ caption }) {
 function ImageTile({ image, large = false }) {
   if (!image?.src) return <Placeholder caption={image?.caption} />;
   return (
-    <motion.figure initial={{ opacity: 0, y: 30, scale: 0.97, filter: "blur(12px)" }} animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }} transition={riseTransition} className={`overflow-hidden rounded-[28px] border border-white/15 bg-white/10 shadow-glass ${large ? "min-h-80" : "min-h-44"}`}>
+    <motion.figure initial={{ opacity: 0, y: 30, scale: 0.97, filter: "blur(12px)" }} animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }} transition={riseTransition} className={`min-w-0 overflow-hidden rounded-[28px] border border-white/15 bg-white/10 shadow-glass ${large ? "min-h-80" : "min-h-44"}`}>
       <img src={image.src} alt={image.caption || "Uploaded content"} className="h-full min-h-[inherit] w-full object-cover" />
       {image.caption ? (
         <figcaption className="border-t border-white/10 bg-slate-950/35 px-4 py-2 text-sm text-white/78">
@@ -81,11 +82,11 @@ function Bento({ section }) {
     <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
       {items.map((item, index) => (
         <Rise key={item + index} index={index}>
-          <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="xs" shadowIntensity="xs" className="border border-white/16 bg-white/12 p-5 shadow-glass">
+          <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="xs" shadowIntensity="xs" className="min-w-0 overflow-hidden border border-white/16 bg-white/12 p-5 shadow-glass">
             <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/16 text-cyan-100">
               {index % 3 === 0 ? <Sparkles /> : index % 3 === 1 ? <Layers3 /> : <CircleDot />}
             </div>
-            <RevealCopy text={item} className="text-balance text-xl font-semibold leading-snug text-white" />
+            <RevealCopy text={item} className="text-balance text-lg font-semibold leading-snug text-white xl:text-xl" />
           </LiquidGlassCard>
         </Rise>
       ))}
@@ -98,12 +99,12 @@ function Steps({ section }) {
     <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-3">
       {section.bullets?.map((step, index) => (
         <Rise key={step + index} index={index}>
-          <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="xs" shadowIntensity="xs" className="relative overflow-hidden border border-white/16 bg-white/12 p-5 shadow-glass">
+          <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="xs" shadowIntensity="xs" className="relative min-w-0 overflow-hidden border border-white/16 bg-white/12 p-5 shadow-glass">
             <div className="mb-6 flex items-center justify-between">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-950 text-lg font-black">{index + 1}</span>
               {index % 4 === 0 ? <MessageCircle className="text-cyan-100" /> : index % 4 === 1 ? <UsersRound className="text-cyan-100" /> : index % 4 === 2 ? <Check className="text-cyan-100" /> : <ChevronRight className="text-cyan-100" />}
             </div>
-            <RevealCopy text={step} className="text-xl font-semibold leading-snug text-white/92" />
+            <RevealCopy text={step} className="text-lg font-semibold leading-snug text-white/92 xl:text-xl" />
           </LiquidGlassCard>
         </Rise>
       ))}
@@ -117,15 +118,15 @@ function TextCards({ section }) {
     <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-2">
       {section.text && !section.text.includes("ADD_") ? (
         <Rise className="lg:col-span-2">
-          <div className="rounded-[32px] border border-white/16 bg-white/14 p-7 text-2xl leading-relaxed text-white/90 shadow-glass backdrop-blur-2xl">
-            <RevealCopy text={section.text} className="text-2xl leading-relaxed text-white/90" />
+          <div className="min-w-0 overflow-hidden rounded-[32px] border border-white/16 bg-white/14 p-7 text-2xl leading-relaxed text-white/90 shadow-glass backdrop-blur-2xl">
+            <RevealCopy text={section.text} className="text-xl leading-relaxed text-white/90 xl:text-2xl" />
           </div>
         </Rise>
       ) : null}
       {lines.map((line, index) => (
         <Rise key={line + index} index={index + 1}>
-          <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="xs" shadowIntensity="xs" className="border border-white/16 bg-white/10 p-5 text-xl font-semibold leading-snug text-white/90 shadow-glass">
-            <RevealCopy text={line} className="text-xl font-semibold leading-snug text-white/90" />
+          <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="xs" shadowIntensity="xs" className="min-w-0 overflow-hidden border border-white/16 bg-white/10 p-5 text-xl font-semibold leading-snug text-white/90 shadow-glass">
+            <RevealCopy text={line} className="text-lg font-semibold leading-snug text-white/90 xl:text-xl" />
           </LiquidGlassCard>
         </Rise>
       ))}
@@ -137,14 +138,14 @@ function TextHeavy({ section }) {
   return (
     <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-2">
       <Rise>
-        <div className="rounded-[32px] border border-white/16 bg-white/14 p-6 shadow-glass backdrop-blur-2xl">
+        <div className="min-w-0 overflow-hidden rounded-[32px] border border-white/16 bg-white/14 p-6 shadow-glass backdrop-blur-2xl">
           <RevealCopy text={section.text} className="whitespace-pre-wrap text-lg leading-relaxed text-white/90" />
         </div>
       </Rise>
       <div className="grid gap-3">
         {section.bullets?.map((bullet, index) => (
           <Rise key={bullet + index} index={index + 1}>
-            <details open={index < 3} className="rounded-[22px] border border-white/14 bg-white/10 p-4 text-white shadow-glass backdrop-blur-xl">
+            <details open={index < 3} className="min-w-0 overflow-hidden rounded-[22px] border border-white/14 bg-white/10 p-4 text-white shadow-glass backdrop-blur-xl">
             <summary className="cursor-pointer text-lg font-bold"><RevealCopy text={bullet} className="inline text-lg font-bold" /></summary>
             <p className="mt-3 text-sm leading-relaxed text-white/72">Editable detail area. Add exact source text in the edit portal.</p>
           </details>
@@ -173,12 +174,12 @@ function TwoColumn({ section }) {
   return (
     <div className="grid w-full grid-cols-1 gap-5 xl:grid-cols-2">
       <Rise>
-      <div className="rounded-[32px] border border-white/16 bg-white/14 p-7 shadow-glass backdrop-blur-2xl">
+      <div className="min-w-0 overflow-hidden rounded-[32px] border border-white/16 bg-white/14 p-7 shadow-glass backdrop-blur-2xl">
         <RevealCopy text={section.text} className="whitespace-pre-wrap text-xl leading-relaxed text-white/90" />
         <div className="mt-5 grid gap-3">
           {section.bullets?.map((bullet, index) => (
             <Rise key={bullet} index={index + 1}>
-            <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-3 text-white/88">
+            <div className="flex min-w-0 items-start gap-3 overflow-hidden rounded-2xl bg-white/10 p-3 text-white/88">
               <Check className="mt-1 h-5 w-5 shrink-0 text-cyan-100" />
               <RevealCopy text={bullet} className="text-white/88" />
             </div>
@@ -195,13 +196,13 @@ function TwoColumn({ section }) {
 function Roadmap({ section }) {
   const items = section.bullets?.length ? section.bullets : textLines(section.text);
   return (
-    <div className="w-full rounded-[36px] border border-white/16 bg-white/12 p-8 shadow-glass backdrop-blur-2xl">
-      <div className="grid gap-5 lg:grid-cols-5">
+    <div className="w-full min-w-0 overflow-hidden rounded-[36px] border border-white/16 bg-white/12 p-7 shadow-glass backdrop-blur-2xl">
+      <div className="grid gap-4 lg:grid-cols-5">
         {items.map((item, index) => (
         <Rise key={item + index} index={index} className="relative">
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white text-slate-950 text-xl font-black">{index + 1}</div>
-            <RevealCopy text={item} className="text-lg font-bold leading-snug text-white" />
-            {index < items.length - 1 ? <div className="absolute left-16 top-7 hidden h-px w-[calc(100%-3rem)] bg-white/28 lg:block" /> : null}
+            <RevealCopy text={item} className="text-base font-bold leading-snug text-white xl:text-lg" />
+            {index < items.length - 1 ? <div className="absolute left-16 top-7 hidden h-px w-[calc(100%-4rem)] bg-white/28 lg:block" /> : null}
           </Rise>
         ))}
       </div>
@@ -212,12 +213,12 @@ function Roadmap({ section }) {
 function Metrics({ section }) {
   const items = section.bullets?.length ? section.bullets : textLines(section.text);
   return (
-    <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
       {items.map((item, index) => (
         <Rise key={item + index} index={index}>
-          <LiquidGlassCard draggable={false} borderRadius="30px" glowIntensity="xs" shadowIntensity="xs" className="border border-white/16 bg-white/12 p-6 shadow-glass">
-            <div className="mb-8 text-5xl font-black text-white">{String(index + 1).padStart(2, "0")}</div>
-            <RevealCopy text={item} className="text-xl font-bold leading-tight text-white/92" />
+          <LiquidGlassCard draggable={false} borderRadius="30px" glowIntensity="xs" shadowIntensity="xs" className="min-w-0 overflow-hidden border border-white/16 bg-white/12 p-5 shadow-glass">
+            <div className="mb-6 text-4xl font-black text-white xl:text-5xl">{String(index + 1).padStart(2, "0")}</div>
+            <RevealCopy text={item} className="text-base font-bold leading-tight text-white/92 xl:text-lg" />
           </LiquidGlassCard>
         </Rise>
       ))}
@@ -231,11 +232,11 @@ function Recognition({ section }) {
     <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-3">
       {items.map((item, index) => (
         <Rise key={item + index} index={index}>
-          <LiquidGlassCard draggable={false} borderRadius="34px" glowIntensity="md" shadowIntensity="sm" className="border border-white/18 bg-white/14 p-7 text-center shadow-glow">
+          <LiquidGlassCard draggable={false} borderRadius="34px" glowIntensity="md" shadowIntensity="sm" className="min-w-0 overflow-hidden border border-white/18 bg-white/14 p-7 text-center shadow-glow">
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-white text-slate-950">
               {index === 0 ? <Trophy /> : <Award />}
             </div>
-            <RevealCopy text={item} className="text-2xl font-black leading-tight text-white" />
+            <RevealCopy text={item} className="text-xl font-black leading-tight text-white xl:text-2xl" />
           </LiquidGlassCard>
         </Rise>
       ))}
@@ -249,11 +250,11 @@ function Process({ section }) {
     <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-2">
       {items.map((item, index) => (
         <Rise key={item + index} index={index}>
-          <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="xs" shadowIntensity="xs" className="flex gap-4 border border-white/16 bg-white/12 p-5 shadow-glass">
+          <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="xs" shadowIntensity="xs" className="flex min-w-0 gap-4 overflow-hidden border border-white/16 bg-white/12 p-4 shadow-glass">
             <CalendarClock className="h-8 w-8 shrink-0 text-cyan-100" />
-            <div>
+            <div className="min-w-0">
               <div className="text-sm font-semibold uppercase tracking-[0.2em] text-white/55">Update {index + 1}</div>
-              <RevealCopy text={item} className="mt-2 text-xl font-bold leading-snug text-white" />
+              <RevealCopy text={item} className="mt-2 text-base font-bold leading-snug text-white xl:text-lg" />
             </div>
           </LiquidGlassCard>
         </Rise>
@@ -276,9 +277,9 @@ function BlockObject({ block, index }) {
   if (block.type === "metric") {
     return (
       <Rise index={index} className={spanClass}>
-        <LiquidGlassCard draggable={false} borderRadius="30px" glowIntensity="xs" shadowIntensity="xs" className="border border-white/16 bg-white/12 p-6 shadow-glass">
+        <LiquidGlassCard draggable={false} borderRadius="30px" glowIntensity="xs" shadowIntensity="xs" className="min-w-0 overflow-hidden border border-white/16 bg-white/12 p-6 shadow-glass">
           <div className="mb-7 text-6xl font-black text-white">{block.metricValue || String(index + 1).padStart(2, "0")}</div>
-          <RevealCopy text={block.title} className="text-2xl font-black leading-tight text-white" />
+          <RevealCopy text={block.title} className="text-xl font-black leading-tight text-white xl:text-2xl" />
           {block.text ? <RevealCopy text={block.text} className="mt-3 text-lg leading-relaxed text-white/75" /> : null}
         </LiquidGlassCard>
       </Rise>
@@ -288,9 +289,9 @@ function BlockObject({ block, index }) {
   if (block.type === "quote") {
     return (
       <Rise index={index} className={spanClass}>
-        <LiquidGlassCard draggable={false} borderRadius="34px" glowIntensity="md" shadowIntensity="sm" className="border border-white/18 bg-white/14 p-7 text-center shadow-glow">
+        <LiquidGlassCard draggable={false} borderRadius="34px" glowIntensity="md" shadowIntensity="sm" className="min-w-0 overflow-hidden border border-white/18 bg-white/14 p-7 text-center shadow-glow">
           <Trophy className="mx-auto mb-5 h-10 w-10 text-cyan-100" />
-          <RevealCopy text={block.text || block.title} className="text-balance text-3xl font-black leading-tight text-white" />
+          <RevealCopy text={block.text || block.title} className="text-balance text-2xl font-black leading-tight text-white xl:text-3xl" />
           {block.caption ? <RevealCopy text={block.caption} className="mt-4 text-sm font-bold uppercase tracking-[0.18em] text-white/55" /> : null}
         </LiquidGlassCard>
       </Rise>
@@ -300,12 +301,12 @@ function BlockObject({ block, index }) {
   if (block.type === "bullets") {
     return (
       <Rise index={index} className={spanClass}>
-        <LiquidGlassCard draggable={false} borderRadius="30px" glowIntensity="xs" shadowIntensity="xs" className="border border-white/16 bg-white/12 p-6 shadow-glass">
+        <LiquidGlassCard draggable={false} borderRadius="30px" glowIntensity="xs" shadowIntensity="xs" className="min-w-0 overflow-hidden border border-white/16 bg-white/12 p-6 shadow-glass">
           <RevealCopy text={block.title} className="mb-5 text-2xl font-black text-white" />
           <div className="grid gap-3">
             {(block.bullets || []).map((bullet, bulletIndex) => (
               <Rise key={bullet + bulletIndex} index={bulletIndex}>
-                <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-3 text-white/88">
+                <div className="flex min-w-0 items-start gap-3 overflow-hidden rounded-2xl bg-white/10 p-3 text-white/88">
                   <Check className="mt-1 h-5 w-5 shrink-0 text-cyan-100" />
                   <RevealCopy text={bullet} className="text-white/88" />
                 </div>
@@ -323,7 +324,7 @@ function BlockObject({ block, index }) {
 
   return (
     <Rise index={index} className={spanClass}>
-      <LiquidGlassCard draggable={false} borderRadius="30px" glowIntensity="xs" shadowIntensity="xs" className="border border-white/16 bg-white/12 p-6 shadow-glass">
+      <LiquidGlassCard draggable={false} borderRadius="30px" glowIntensity="xs" shadowIntensity="xs" className="min-w-0 overflow-hidden border border-white/16 bg-white/12 p-6 shadow-glass">
         {block.title ? <RevealCopy text={block.title} className="mb-4 text-2xl font-black text-white" /> : null}
         <RevealCopy text={block.text} className="whitespace-pre-wrap text-xl leading-relaxed text-white/86" />
       </LiquidGlassCard>
