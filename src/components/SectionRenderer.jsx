@@ -184,7 +184,7 @@ function BusinessDetailOverlay({ item, onClose }) {
           {item.type === "image" ? (
             <div className="flex min-h-[340px] items-center justify-center border-t border-white/10 bg-black/35 p-5 lg:border-l lg:border-t-0">
               {item.image?.src ? (
-                <img src={item.image.src} alt={item.title || "Expanded image"} className="max-h-[74vh] w-full rounded-[24px] object-contain" />
+                <img src={item.image.src} alt={item.title || "Expanded image"} className="h-auto max-h-[74vh] w-auto max-w-full rounded-[24px] object-contain" />
               ) : (
                 <div className="flex h-full min-h-[320px] w-full items-center justify-center rounded-[24px] border border-dashed border-white/20 bg-white/[0.06] text-sm font-black uppercase tracking-[0.18em] text-white/48">
                   Image Placeholder

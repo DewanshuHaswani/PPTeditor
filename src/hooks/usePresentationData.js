@@ -37,6 +37,7 @@ function migratePresentationData(data) {
 }
 
 export function usePresentationData() {
+  const canPersist = typeof window !== "undefined" && window.location.pathname === "/edit";
   const [data, setData] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -47,12 +48,13 @@ export function usePresentationData() {
   });
 
   useEffect(() => {
+    if (!canPersist) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch {
       // Explicit Save Changes reports storage failures; autosave should not break editing.
     }
-  }, [data]);
+  }, [canPersist, data]);
 
   useEffect(() => {
     const loadSavedData = (rawValue) => {
@@ -72,11 +74,21 @@ export function usePresentationData() {
       loadSavedData(localStorage.getItem(STORAGE_KEY));
     };
 
+    const onVisible = () => {
+      if (document.visibilityState === "visible") onSaved();
+    };
+
     window.addEventListener("storage", onStorage);
     window.addEventListener(SAVE_EVENT, onSaved);
+    window.addEventListener("focus", onSaved);
+    window.addEventListener("pageshow", onSaved);
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener(SAVE_EVENT, onSaved);
+      window.removeEventListener("focus", onSaved);
+      window.removeEventListener("pageshow", onSaved);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 
