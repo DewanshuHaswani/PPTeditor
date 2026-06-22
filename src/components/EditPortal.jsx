@@ -1,7 +1,7 @@
 import { Copy, Download, Eye, FileInput, ImagePlus, LayoutGrid, List, Plus, Quote, Save, Text, Trash2, Upload } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { createContentBlock, createImagePlaceholder, createSection, createSlide, presentationData } from "../data/presentationData";
-import { blockSizeOptions, blockTypeOptions, fileToDataUrl, flattenSlides, layoutOptions, legacySectionBlocks } from "../utils/layout";
+import { blockSizeOptions, blockTypeOptions, fileToDataUrl, flattenSlides, imageFitOptions, imagePositionOptions, layoutOptions, legacySectionBlocks, textSizeOptions } from "../utils/layout";
 import { GlassButton } from "./GlassButton";
 import { SlideCanvas } from "./SlideCanvas";
 import { SortableList } from "./SortableList";
@@ -152,6 +152,9 @@ export function EditPortal({ data, actions }) {
         src,
         caption: imageIndex === null ? file.name : images[imageIndex]?.caption || file.name,
         role: imageIndex === null ? "gallery" : images[imageIndex]?.role || "gallery",
+        size: imageIndex === null ? "normal" : images[imageIndex]?.size || "normal",
+        fit: imageIndex === null ? "cover" : images[imageIndex]?.fit || "cover",
+        position: imageIndex === null ? "center" : images[imageIndex]?.position || "center",
         isPlaceholder: false
       };
       if (imageIndex === null) images.push(item);
@@ -209,7 +212,8 @@ export function EditPortal({ data, actions }) {
         bullets: type === "bullets" ? block.bullets?.length ? block.bullets : block.text ? block.text.split("\n").filter(Boolean) : ["Editable bullet"] : block.bullets || [],
         text: type === "image" ? "" : block.text || "",
         metricValue: type === "metric" ? block.metricValue || "01" : block.metricValue || "",
-        size: type === "image" && block.size === "normal" ? "wide" : block.size || "normal"
+        size: type === "image" && block.size === "normal" ? "wide" : block.size || "normal",
+        textSize: block.textSize || "md"
       };
       return converted;
     });
@@ -226,6 +230,9 @@ export function EditPortal({ data, actions }) {
         src,
         caption: block.caption || file.name,
         role: "gallery",
+        size: block.image?.size || block.size || "wide",
+        fit: block.image?.fit || "cover",
+        position: block.image?.position || "center",
         isPlaceholder: false
       },
       caption: block.caption || file.name,
@@ -469,19 +476,33 @@ export function EditPortal({ data, actions }) {
                               </div>
                             </div>
 
-                            <div className="grid gap-3 md:grid-cols-3">
+                            <div className="grid gap-3 md:grid-cols-4">
                               <TextInput label="Object Title" value={block.title || ""} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, title: value }))} />
                               <SelectInput label="Convert Type" value={block.type || "text"} onChange={(value) => convertBlock(blockIndex, value)} options={blockTypeOptions} />
                               <SelectInput label="Object Size" value={block.size || "normal"} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, size: value }))} options={blockSizeOptions} />
+                              <SelectInput label="Text Size" value={block.textSize || "md"} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, textSize: value }))} options={textSizeOptions} />
                             </div>
 
                             {block.type === "image" ? (
                               <div className="mt-4 grid gap-4 md:grid-cols-[180px_1fr]">
                                 <div className="flex aspect-video items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                                  {block.image?.src ? <img src={block.image.src} alt={block.caption || block.title} className="h-full w-full object-cover" /> : <LayoutGrid className="h-9 w-9 text-slate-300" />}
+                                  {block.image?.src ? (
+                                    <img
+                                      src={block.image.src}
+                                      alt={block.caption || block.title}
+                                      className="h-full w-full"
+                                      style={{ objectFit: block.image?.fit || "cover", objectPosition: block.image?.position || "center" }}
+                                    />
+                                  ) : (
+                                    <LayoutGrid className="h-9 w-9 text-slate-300" />
+                                  )}
                                 </div>
                                 <div className="grid gap-3">
                                   <TextInput label="Caption" value={block.caption || block.image?.caption || ""} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, caption: value, image: item.image ? { ...item.image, caption: value } : item.image }))} />
+                                  <div className="grid gap-3 md:grid-cols-2">
+                                    <SelectInput label="Image Fit" value={block.image?.fit || "cover"} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, fit: value } : { ...createImagePlaceholder(item.title || "Image Object"), fit: value } }))} options={imageFitOptions} />
+                                    <SelectInput label="Crop Position" value={block.image?.position || "center"} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, position: value } : { ...createImagePlaceholder(item.title || "Image Object"), position: value } }))} options={imagePositionOptions} />
+                                  </div>
                                   <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white">
                                     <Upload className="h-4 w-4" /> Upload Image
                                     <input type="file" accept="image/*" hidden onChange={(event) => event.target.files?.[0] && handleBlockImageUpload(event.target.files[0], blockIndex)} />
@@ -574,7 +595,16 @@ export function EditPortal({ data, actions }) {
                       <SortableRow key={image.id} id={image.id}>
                         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
                           <div className="mb-3 flex aspect-video items-center justify-center overflow-hidden rounded-xl bg-white">
-                            {image.src ? <img src={image.src} alt={image.caption} className="h-full w-full object-cover" /> : <LayoutGrid className="h-8 w-8 text-slate-300" />}
+                            {image.src ? (
+                              <img
+                                src={image.src}
+                                alt={image.caption}
+                                className="h-full w-full"
+                                style={{ objectFit: image.fit || "cover", objectPosition: image.position || "center" }}
+                              />
+                            ) : (
+                              <LayoutGrid className="h-8 w-8 text-slate-300" />
+                            )}
                           </div>
                           <TextInput
                             label="Caption"
@@ -586,6 +616,41 @@ export function EditPortal({ data, actions }) {
                               }))
                             }
                           />
+                          <div className="mt-3 grid gap-3 md:grid-cols-3">
+                            <SelectInput
+                              label="Size"
+                              value={image.size || "normal"}
+                              onChange={(value) =>
+                                setSection((section) => ({
+                                  ...section,
+                                  images: updateAt(section.images || [], imageIndex, (item) => ({ ...item, size: value }))
+                                }))
+                              }
+                              options={blockSizeOptions}
+                            />
+                            <SelectInput
+                              label="Image Fit"
+                              value={image.fit || "cover"}
+                              onChange={(value) =>
+                                setSection((section) => ({
+                                  ...section,
+                                  images: updateAt(section.images || [], imageIndex, (item) => ({ ...item, fit: value }))
+                                }))
+                              }
+                              options={imageFitOptions}
+                            />
+                            <SelectInput
+                              label="Crop Position"
+                              value={image.position || "center"}
+                              onChange={(value) =>
+                                setSection((section) => ({
+                                  ...section,
+                                  images: updateAt(section.images || [], imageIndex, (item) => ({ ...item, position: value }))
+                                }))
+                              }
+                              options={imagePositionOptions}
+                            />
+                          </div>
                           <div className="mt-3 flex gap-2">
                             <label className="flex-1 cursor-pointer rounded-full bg-white px-3 py-2 text-center text-xs font-black text-slate-700">
                               Replace

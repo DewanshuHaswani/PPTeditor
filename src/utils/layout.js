@@ -29,7 +29,10 @@ export const layoutOptions = [
 ];
 
 export const blockTypeOptions = ["text", "bullets", "image", "metric", "quote", "placeholder"];
-export const blockSizeOptions = ["normal", "wide", "hero"];
+export const blockSizeOptions = ["small", "normal", "wide", "hero"];
+export const textSizeOptions = ["sm", "md", "lg", "xl"];
+export const imageFitOptions = ["cover", "contain"];
+export const imagePositionOptions = ["center", "top", "bottom", "left", "right"];
 
 export function legacySectionBlocks(section = {}) {
   const blocks = [];
@@ -44,6 +47,7 @@ export function legacySectionBlocks(section = {}) {
       metricValue: "",
       caption: "",
       size: section.text.length > 260 ? "wide" : "normal",
+      textSize: section.text.length > 260 ? "sm" : "md",
       visible: true
     });
   }
@@ -58,6 +62,7 @@ export function legacySectionBlocks(section = {}) {
       metricValue: "",
       caption: "",
       size: section.bullets.length > 4 ? "wide" : "normal",
+      textSize: section.bullets.length > 6 ? "sm" : "md",
       visible: true
     });
   }
@@ -71,7 +76,8 @@ export function legacySectionBlocks(section = {}) {
       image,
       metricValue: "",
       caption: image.caption || "",
-      size: index === 0 && section.images.length === 1 ? "hero" : "normal",
+      size: image.size || (index === 0 && section.images.length === 1 ? "hero" : "normal"),
+      textSize: "md",
       visible: true
     });
   });

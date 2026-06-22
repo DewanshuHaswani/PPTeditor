@@ -4,26 +4,26 @@ import { presentationData } from "../data/presentationData";
 
 const STORAGE_KEY = "ahm-premium-presentation-data";
 
-function migratePeopleGroupContent(data) {
+function migratePresentationData(data) {
   const copy = cloneData(data);
   const defaults = cloneData(presentationData);
-  const defaultPeople = defaults.slides.find((slide) => slide.id === "people-group");
-  const defaultOpenInnovation = defaults.slides.find((slide) => slide.id === "open-innovation");
   const defaultCollaborationThought = defaults.slides.find((slide) => slide.id === "why-collaboration-matters");
-  const openInnovation = copy.slides?.find((slide) => slide.id === "open-innovation");
-  const peopleGroup = copy.slides?.find((slide) => slide.id === "people-group");
+  const leadership = copy.slides?.find((slide) => slide.id === "leadership-address");
+  const businessGroupIds = ["advance-research-group", "open-innovation", "standards-research-group", "ip-group", "people-group"];
 
-  if (openInnovation?.sections) {
-    openInnovation.sections = openInnovation.sections.filter((section) => section.id !== "competency-feedback" && section.title !== "Competency Assessment & Mid-Year Feedback");
-    if (defaultOpenInnovation && !openInnovation.sections.some((section) => section.id === "open-innovation-placeholder")) {
-      const placeholder = defaultOpenInnovation.sections.find((section) => section.id === "open-innovation-placeholder");
-      if (placeholder) openInnovation.sections.push(cloneData(placeholder));
+  if (leadership) {
+    leadership.title = "Mohan Roa Goli";
+    leadership.subtitle = "";
+  }
+
+  businessGroupIds.forEach((groupId) => {
+    const slide = copy.slides?.find((item) => item.id === groupId);
+    const defaultSlide = defaults.slides.find((item) => item.id === groupId);
+    const defaultSummaryId = defaultSlide?.sections?.[0]?.id;
+    if (slide && defaultSlide && defaultSummaryId && !slide.sections?.some((section) => section.id === defaultSummaryId)) {
+      slide.sections = cloneData(defaultSlide.sections);
     }
-  }
-
-  if (peopleGroup && defaultPeople && !peopleGroup.sections?.some((section) => section.id === "people-competency-feedback")) {
-    peopleGroup.sections = cloneData(defaultPeople.sections);
-  }
+  });
 
   if (copy.slides && defaultCollaborationThought && !copy.slides.some((slide) => slide.id === "why-collaboration-matters")) {
     const thankYouIndex = copy.slides.findIndex((slide) => slide.id === "thank-you");
@@ -38,7 +38,7 @@ export function usePresentationData() {
   const [data, setData] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? migratePeopleGroupContent(JSON.parse(saved)) : cloneData(presentationData);
+      return saved ? migratePresentationData(JSON.parse(saved)) : cloneData(presentationData);
     } catch {
       return cloneData(presentationData);
     }

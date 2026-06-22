@@ -23,14 +23,50 @@ import FeatureShaderCards from "@/components/ui/feature-shader-cards";
 import { LiquidGlassCard } from "@/components/ui/liquid-weather-glass";
 import { resolveLayout } from "../utils/layout";
 
-const riseTransition = { duration: 0.58, ease: [0.22, 1, 0.36, 1] };
+const riseTransition = { duration: 0.36, ease: [0.22, 1, 0.36, 1] };
+
+const textSizeClasses = {
+  sm: "text-sm leading-relaxed xl:text-base",
+  md: "text-base leading-relaxed xl:text-lg",
+  lg: "text-lg leading-snug xl:text-xl",
+  xl: "text-xl leading-snug xl:text-2xl"
+};
+
+const displayTextSizeClasses = {
+  sm: "text-xl leading-tight xl:text-2xl",
+  md: "text-2xl leading-tight xl:text-3xl",
+  lg: "text-3xl leading-tight xl:text-4xl",
+  xl: "text-4xl leading-tight xl:text-5xl"
+};
+
+function textScale(size = "md", fallback = "text-base leading-relaxed xl:text-lg") {
+  return textSizeClasses[size] || fallback;
+}
+
+function displayTextScale(size = "md", fallback = "text-2xl leading-tight xl:text-3xl") {
+  return displayTextSizeClasses[size] || fallback;
+}
+
+function imageStyle(image = {}) {
+  return {
+    objectFit: image.fit || "cover",
+    objectPosition: image.position || "center"
+  };
+}
+
+function imageHeightClass(image = {}, large = false) {
+  if (large || image.size === "hero") return "min-h-80";
+  if (image.size === "wide") return "min-h-64";
+  if (image.size === "small") return "min-h-32";
+  return "min-h-44";
+}
 
 function Rise({ children, index = 0, className = "" }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 34, scale: 0.96, filter: "blur(14px)" }}
+      initial={{ opacity: 0, y: 24, scale: 0.98, filter: "blur(5px)" }}
       animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-      transition={{ ...riseTransition, delay: index * 0.06 }}
+      transition={{ ...riseTransition, delay: index * 0.035 }}
       className={`min-w-0 ${className}`}
     >
       {children}
@@ -43,7 +79,7 @@ function RevealCopy({ text, className = "", stagger = 0.01 }) {
   const safeClassName = `min-w-0 max-w-full break-words [overflow-wrap:anywhere] ${className}`;
   if (String(text).length > 220) {
     return (
-      <motion.p initial={{ opacity: 0, y: 18, filter: "blur(10px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={riseTransition} className={safeClassName}>
+      <motion.p initial={{ opacity: 0, y: 14, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={riseTransition} className={safeClassName}>
         {text}
       </motion.p>
     );
@@ -65,8 +101,8 @@ function Placeholder({ caption }) {
 function ImageTile({ image, large = false }) {
   if (!image?.src) return <Placeholder caption={image?.caption} />;
   return (
-    <motion.figure initial={{ opacity: 0, y: 30, scale: 0.97, filter: "blur(12px)" }} animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }} transition={riseTransition} className={`min-w-0 overflow-hidden rounded-[28px] border border-white/15 bg-white/10 shadow-glass ${large ? "min-h-80" : "min-h-44"}`}>
-      <img src={image.src} alt={image.caption || "Uploaded content"} className="h-full min-h-[inherit] w-full object-cover" />
+    <motion.figure initial={{ opacity: 0, y: 22, scale: 0.98, filter: "blur(5px)" }} animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }} transition={riseTransition} className={`min-w-0 overflow-hidden rounded-[28px] border border-white/15 bg-white/10 shadow-glass ${imageHeightClass(image, large)}`}>
+      <img src={image.src} alt={image.caption || "Uploaded content"} className="h-full min-h-[inherit] w-full" style={imageStyle(image)} loading="lazy" />
       {image.caption ? (
         <figcaption className="border-t border-white/10 bg-slate-950/35 px-4 py-2 text-sm text-white/78">
           <RevealCopy text={image.caption} className="text-sm text-white/78" />
@@ -93,7 +129,7 @@ function BentoPanel({ children, className = "" }) {
 
 function MixedBentoCard({ item, index, tall = false, wide = false }) {
   if (item?.kind === "image") {
-    return <ImageTile image={item.image} large={tall || wide} />;
+    return <ImageTile image={{ ...item.image, size: item.size || item.image?.size }} large={tall || wide} />;
   }
 
   if (item?.kind === "metric") {
@@ -101,7 +137,7 @@ function MixedBentoCard({ item, index, tall = false, wide = false }) {
       <BentoPanel>
         <div className="mb-5 text-5xl font-black text-white">{item.value || String(index + 1).padStart(2, "0")}</div>
         <RevealCopy text={item.title} className="text-xl font-black leading-tight text-white" />
-        <RevealCopy text={item.text} className="mt-3 text-base leading-relaxed text-white/76" />
+        <RevealCopy text={item.text} className={`mt-3 text-white/76 ${textScale(item.textSize)}`} />
       </BentoPanel>
     );
   }
@@ -112,7 +148,7 @@ function MixedBentoCard({ item, index, tall = false, wide = false }) {
         {index % 3 === 0 ? <Sparkles /> : index % 3 === 1 ? <Layers3 /> : <CircleDot />}
       </div>
       <RevealCopy text={item?.title || `Item ${index + 1}`} className="text-xl font-black leading-tight text-white" />
-      <RevealCopy text={item?.text} className="mt-3 text-base font-semibold leading-relaxed text-white/80" />
+      <RevealCopy text={item?.text} className={`mt-3 font-semibold text-white/80 ${textScale(item?.textSize)}`} />
     </BentoPanel>
   );
 }
@@ -381,12 +417,13 @@ function Process({ section }) {
 }
 
 function BlockObject({ block, index }) {
-  const spanClass = block.size === "hero" ? "lg:col-span-3 min-h-80" : block.size === "wide" ? "lg:col-span-2" : "";
+  const spanClass = block.size === "hero" ? "lg:col-span-3 min-h-80" : block.size === "wide" ? "lg:col-span-2" : block.size === "small" ? "lg:col-span-1" : "";
+  const copyClass = textScale(block.textSize);
 
   if (block.type === "image") {
     return (
       <Rise index={index} className={spanClass}>
-        <ImageTile image={block.image || { caption: block.caption || block.title }} large={block.size === "hero"} />
+        <ImageTile image={{ ...(block.image || { caption: block.caption || block.title }), size: block.size }} large={block.size === "hero"} />
       </Rise>
     );
   }
@@ -397,7 +434,7 @@ function BlockObject({ block, index }) {
         <LiquidGlassCard draggable={false} borderRadius="30px" glowIntensity="xs" shadowIntensity="xs" className="min-w-0 overflow-hidden border border-white/16 bg-white/12 p-6 shadow-glass">
           <div className="mb-7 text-6xl font-black text-white">{block.metricValue || String(index + 1).padStart(2, "0")}</div>
           <RevealCopy text={block.title} className="text-xl font-black leading-tight text-white xl:text-2xl" />
-          {block.text ? <RevealCopy text={block.text} className="mt-3 text-lg leading-relaxed text-white/75" /> : null}
+          {block.text ? <RevealCopy text={block.text} className={`mt-3 text-white/75 ${copyClass}`} /> : null}
         </LiquidGlassCard>
       </Rise>
     );
@@ -408,7 +445,7 @@ function BlockObject({ block, index }) {
       <Rise index={index} className={spanClass}>
         <LiquidGlassCard draggable={false} borderRadius="34px" glowIntensity="md" shadowIntensity="sm" className="min-w-0 overflow-hidden border border-white/18 bg-white/14 p-7 text-center shadow-glow">
           <Trophy className="mx-auto mb-5 h-10 w-10 text-cyan-100" />
-          <RevealCopy text={block.text || block.title} className="text-balance text-2xl font-black leading-tight text-white xl:text-3xl" />
+          <RevealCopy text={block.text || block.title} className={`text-balance font-black text-white ${displayTextScale(block.textSize)}`} />
           {block.caption ? <RevealCopy text={block.caption} className="mt-4 text-sm font-bold uppercase tracking-[0.18em] text-white/55" /> : null}
         </LiquidGlassCard>
       </Rise>
@@ -419,13 +456,13 @@ function BlockObject({ block, index }) {
     return (
       <Rise index={index} className={spanClass}>
         <LiquidGlassCard draggable={false} borderRadius="30px" glowIntensity="xs" shadowIntensity="xs" className="min-w-0 overflow-hidden border border-white/16 bg-white/12 p-6 shadow-glass">
-          <RevealCopy text={block.title} className="mb-5 text-2xl font-black text-white" />
+          <RevealCopy text={block.title} className={`mb-5 font-black text-white ${displayTextScale(block.textSize, "text-2xl leading-tight")}`} />
           <div className="grid gap-3">
             {(block.bullets || []).map((bullet, bulletIndex) => (
               <Rise key={bullet + bulletIndex} index={bulletIndex}>
                 <div className="flex min-w-0 items-start gap-3 overflow-hidden rounded-2xl bg-white/10 p-3 text-white/88">
                   <Check className="mt-1 h-5 w-5 shrink-0 text-cyan-100" />
-                  <RevealCopy text={bullet} className="text-white/88" />
+                  <RevealCopy text={bullet} className={`text-white/88 ${copyClass}`} />
                 </div>
               </Rise>
             ))}
@@ -443,7 +480,7 @@ function BlockObject({ block, index }) {
     <Rise index={index} className={spanClass}>
       <LiquidGlassCard draggable={false} borderRadius="30px" glowIntensity="xs" shadowIntensity="xs" className="min-w-0 overflow-hidden border border-white/16 bg-white/12 p-6 shadow-glass">
         {block.title ? <RevealCopy text={block.title} className="mb-4 text-2xl font-black text-white" /> : null}
-        <RevealCopy text={block.text} className="whitespace-pre-wrap text-xl leading-relaxed text-white/86" />
+        <RevealCopy text={block.text} className={`whitespace-pre-wrap text-white/86 ${textScale(block.textSize, "text-xl leading-relaxed")}`} />
       </LiquidGlassCard>
     </Rise>
   );
@@ -459,7 +496,8 @@ function ObjectLayout({ section }) {
       if (block.type === "image") {
         return {
           kind: "image",
-          image: block.image || { caption: block.caption || block.title }
+          image: { ...(block.image || { caption: block.caption || block.title }), size: block.size },
+          size: block.size
         };
       }
       if (block.type === "metric") {
@@ -467,13 +505,15 @@ function ObjectLayout({ section }) {
           kind: "metric",
           value: block.metricValue || String(index + 1).padStart(2, "0"),
           title: block.title,
-          text: block.text
+          text: block.text,
+          textSize: block.textSize
         };
       }
       return {
         kind: "text",
         title: block.title || block.caption || `Object ${index + 1}`,
-        text: block.text || (block.bullets || []).join("\n")
+        text: block.text || (block.bullets || []).join("\n"),
+        textSize: block.textSize
       };
     });
     return <MixedBento items={items} />;

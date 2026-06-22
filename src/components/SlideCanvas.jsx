@@ -10,9 +10,9 @@ import { SectionRenderer } from "./SectionRenderer";
 import { TimerSlide } from "./TimerSlide";
 
 const slideVariants = {
-  initial: { opacity: 0, y: 26, scale: 0.985, filter: "blur(10px)" },
+  initial: { opacity: 0, y: 18, scale: 0.992, filter: "blur(4px)" },
   animate: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" },
-  exit: { opacity: 0, y: -22, scale: 1.015, filter: "blur(10px)" }
+  exit: { opacity: 0, y: -14, scale: 1.006, filter: "blur(3px)" }
 };
 
 const groupNames = ["Advance Research Group", "Open Innovation", "Standards Research Group", "IP Group", "People Group"];
@@ -171,7 +171,7 @@ export function SlideCanvas({ slide, data, preview = false }) {
         initial="initial"
         animate="animate"
         exit="exit"
-        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
         className={`relative z-10 flex min-h-screen items-center justify-center overflow-hidden px-7 py-14 ${preview ? "scale-[0.72] origin-center" : ""}`}
       >
         <div className="w-full max-w-[1400px]">

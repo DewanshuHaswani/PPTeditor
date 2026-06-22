@@ -1,10 +1,11 @@
 import { AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Edit3, Film, Maximize2, ScrollText } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { flattenSlides } from "../utils/layout";
 import { GlassButton } from "./GlassButton";
-import { MovieModeOverlay } from "./MovieModeOverlay";
 import { SlideCanvas } from "./SlideCanvas";
+
+const MovieModeOverlay = lazy(() => import("./MovieModeOverlay").then((module) => ({ default: module.MovieModeOverlay })));
 
 export function PresentationMode({ data }) {
   const slides = useMemo(() => flattenSlides(data), [data]);
@@ -42,7 +43,7 @@ export function PresentationMode({ data }) {
 
   return (
     <main className="relative min-h-screen bg-slate-950 text-white">
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="sync">
         <SlideCanvas slide={current} data={data} />
       </AnimatePresence>
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 p-5">
@@ -77,7 +78,11 @@ export function PresentationMode({ data }) {
           </GlassButton>
         </div>
       </div>
-      {movieModeOpen ? <MovieModeOverlay onClose={() => setMovieModeOpen(false)} onSelectGroup={jumpToGroup} groupTargets={movieGroupTargets} /> : null}
+      {movieModeOpen ? (
+        <Suspense fallback={<div className="fixed inset-0 z-50 bg-black" />}>
+          <MovieModeOverlay onClose={() => setMovieModeOpen(false)} onSelectGroup={jumpToGroup} groupTargets={movieGroupTargets} />
+        </Suspense>
+      ) : null}
     </main>
   );
 }
