@@ -106,11 +106,11 @@ export function GooeyText({ texts, morphTime = 1, cooldownTime = 0.25, className
       <div className="relative flex h-full w-full items-center justify-center" style={{ filter: "url(#threshold)" }}>
         <span
           ref={text1Ref}
-          className={cn("absolute left-1/2 top-1/2 inline-block -translate-x-1/2 -translate-y-1/2 select-none text-center text-6xl md:text-[60pt]", "text-foreground", textClassName)}
+          className={cn("absolute left-1/2 top-1/2 inline-block -translate-x-1/2 -translate-y-1/2 select-none text-center", "text-foreground", textClassName)}
         />
         <span
           ref={text2Ref}
-          className={cn("absolute left-1/2 top-1/2 inline-block -translate-x-1/2 -translate-y-1/2 select-none text-center text-6xl md:text-[60pt]", "text-foreground", textClassName)}
+          className={cn("absolute left-1/2 top-1/2 inline-block -translate-x-1/2 -translate-y-1/2 select-none text-center", "text-foreground", textClassName)}
         />
       </div>
     </div>

@@ -53,14 +53,14 @@ function HeroTitle({ slide }) {
         <StaggerText text={slide.subtitle} textClassName="text-2xl font-semibold text-white/78 md:text-4xl" />
       </motion.div>
       {isIntro ? (
-        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.42, duration: 0.7 }} className="mt-9 h-36 w-full max-w-5xl">
-          <div className="mb-6 text-xs font-black uppercase tracking-[0.26em] text-cyan-100/70">Presenting Groups</div>
+        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.42, duration: 0.7 }} className="mt-9 h-32 w-full max-w-4xl">
+          <div className="mb-4 text-xs font-black uppercase tracking-[0.26em] text-cyan-100/70">Presenting Groups</div>
           <GooeyText
             texts={groupNames}
             morphTime={1}
             cooldownTime={0.45}
-            className="h-24 font-black"
-            textClassName="w-full whitespace-nowrap text-[clamp(1.6rem,3.4vw,3.3rem)] leading-none text-white"
+            className="h-20 overflow-visible font-black"
+            textClassName="max-w-full whitespace-nowrap text-[clamp(1.45rem,2.7vw,2.65rem)] leading-none text-white"
           />
         </motion.div>
       ) : null}
