@@ -363,7 +363,7 @@ export function EditPortal({ data, actions }) {
               </div>
 
               <div className="mt-5 flex flex-wrap gap-2">
-                <GlassButton variant="light" onClick={() => actions.setData((current) => ({ ...current }))}>
+                <GlassButton variant="light" onClick={actions.save}>
                   <Save className="h-4 w-4" /> Save Changes
                 </GlassButton>
                 <GlassButton variant="light" onClick={actions.reset}>

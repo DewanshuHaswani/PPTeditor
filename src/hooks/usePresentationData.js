@@ -3,6 +3,7 @@ import { cloneData } from "../utils/layout";
 import { presentationData } from "../data/presentationData";
 
 const STORAGE_KEY = "ahm-premium-presentation-data";
+const SAVE_EVENT = "ahm-premium-presentation-data-saved";
 
 function migratePresentationData(data) {
   const copy = cloneData(data);
@@ -49,9 +50,39 @@ export function usePresentationData() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }, [data]);
 
+  useEffect(() => {
+    const loadSavedData = (rawValue) => {
+      if (!rawValue) return;
+      try {
+        setData(migratePresentationData(JSON.parse(rawValue)));
+      } catch {
+        // Ignore malformed local edits and keep the current presentation open.
+      }
+    };
+
+    const onStorage = (event) => {
+      if (event.key === STORAGE_KEY) loadSavedData(event.newValue);
+    };
+
+    const onSaved = () => {
+      loadSavedData(localStorage.getItem(STORAGE_KEY));
+    };
+
+    window.addEventListener("storage", onStorage);
+    window.addEventListener(SAVE_EVENT, onSaved);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener(SAVE_EVENT, onSaved);
+    };
+  }, []);
+
   const actions = useMemo(
     () => ({
       setData,
+      save: () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        window.dispatchEvent(new Event(SAVE_EVENT));
+      },
       reset: () => setData(cloneData(presentationData)),
       exportJson: () => {
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
