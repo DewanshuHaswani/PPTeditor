@@ -179,6 +179,29 @@ function CardModal() {
   const [isFavorited, setIsFavorited] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
+  const toggleFavorite = () => setIsFavorited((v) => !v);
+  const handleClose = () => setSelectedCard(null);
+  const handleSelect = () => {
+    if (!selectedCard) return;
+    onSelect?.(selectedCard);
+    handleClose();
+  };
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        handleSelect();
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handleClose();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedCard]);
+
   if (!selectedCard) return null;
 
   const handleMouseMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
@@ -201,14 +224,8 @@ function CardModal() {
     }
   };
 
-  const toggleFavorite = () => setIsFavorited((v) => !v);
-  const handleClose = () => setSelectedCard(null);
   const handleBackdropClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
     if (e.target === e.currentTarget) handleClose();
-  };
-  const handleSelect = () => {
-    onSelect?.(selectedCard);
-    handleClose();
   };
 
   return (
@@ -247,7 +264,10 @@ function CardModal() {
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={handleSelect}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleSelect();
+                }}
                 className="inline-flex h-9 flex-1 items-center justify-center rounded-lg text-base font-medium text-black outline-none transition duration-300 ease-out hover:opacity-80 active:scale-[0.97]"
                 style={{ backgroundColor: "#31b8c6" }}
               >

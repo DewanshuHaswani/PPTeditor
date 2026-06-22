@@ -150,6 +150,8 @@ export function EditPortal({ data, actions }) {
       const item = {
         id: imageIndex === null ? crypto.randomUUID() : images[imageIndex]?.id || crypto.randomUUID(),
         src,
+        title: imageIndex === null ? images[imageIndex]?.title || file.name : images[imageIndex]?.title || file.name,
+        subtitle: imageIndex === null ? images[imageIndex]?.subtitle || "" : images[imageIndex]?.subtitle || "",
         caption: imageIndex === null ? file.name : images[imageIndex]?.caption || file.name,
         role: imageIndex === null ? "gallery" : images[imageIndex]?.role || "gallery",
         size: imageIndex === null ? "normal" : images[imageIndex]?.size || "normal",
@@ -228,6 +230,8 @@ export function EditPortal({ data, actions }) {
         ...(block.image || {}),
         id: block.image?.id || crypto.randomUUID(),
         src,
+        title: block.image?.title || block.title || file.name,
+        subtitle: block.image?.subtitle || "",
         caption: block.caption || file.name,
         role: "gallery",
         size: block.image?.size || block.size || "wide",
@@ -500,6 +504,10 @@ export function EditPortal({ data, actions }) {
                                 <div className="grid gap-3">
                                   <TextInput label="Caption" value={block.caption || block.image?.caption || ""} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, caption: value, image: item.image ? { ...item.image, caption: value } : item.image }))} />
                                   <div className="grid gap-3 md:grid-cols-2">
+                                    <TextInput label="Image Title" value={block.image?.title || ""} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, title: value } : { ...createImagePlaceholder(item.title || "Image Object"), title: value } }))} />
+                                    <TextInput label="Image Subtitle" value={block.image?.subtitle || ""} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, subtitle: value } : { ...createImagePlaceholder(item.title || "Image Object"), subtitle: value } }))} />
+                                  </div>
+                                  <div className="grid gap-3 md:grid-cols-2">
                                     <SelectInput label="Image Fit" value={block.image?.fit || "cover"} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, fit: value } : { ...createImagePlaceholder(item.title || "Image Object"), fit: value } }))} options={imageFitOptions} />
                                     <SelectInput label="Crop Position" value={block.image?.position || "center"} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, position: value } : { ...createImagePlaceholder(item.title || "Image Object"), position: value } }))} options={imagePositionOptions} />
                                   </div>
@@ -616,6 +624,28 @@ export function EditPortal({ data, actions }) {
                               }))
                             }
                           />
+                          <div className="mt-3 grid gap-3 md:grid-cols-2">
+                            <TextInput
+                              label="Image Title"
+                              value={image.title || ""}
+                              onChange={(value) =>
+                                setSection((section) => ({
+                                  ...section,
+                                  images: updateAt(section.images || [], imageIndex, (item) => ({ ...item, title: value }))
+                                }))
+                              }
+                            />
+                            <TextInput
+                              label="Image Subtitle"
+                              value={image.subtitle || ""}
+                              onChange={(value) =>
+                                setSection((section) => ({
+                                  ...section,
+                                  images: updateAt(section.images || [], imageIndex, (item) => ({ ...item, subtitle: value }))
+                                }))
+                              }
+                            />
+                          </div>
                           <div className="mt-3 grid gap-3 md:grid-cols-3">
                             <SelectInput
                               label="Size"

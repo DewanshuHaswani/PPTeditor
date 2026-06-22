@@ -133,14 +133,15 @@ function ThanksSlide({ slide }) {
 function GroupOrActivity({ slide }) {
   const sections = slide.activeSections || [slide.activeSection || slide.sections?.[0]].filter(Boolean);
   const section = sections[0];
+  const isGroup = slide.type === "group";
   return (
     <div className="w-full">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-5">
+      <div className={isGroup ? "mb-4 flex flex-wrap items-center justify-between gap-5" : "mb-6 flex flex-wrap items-end justify-between gap-5"}>
         <div>
           <div className="mb-3 inline-flex max-w-full rounded-full border border-white/16 bg-white/12 px-4 py-2 text-sm font-bold uppercase tracking-[0.24em] text-white/66">
             <StaggerText text={slide.subtitle || slide.groupName || slide.type} textClassName="text-sm font-bold uppercase tracking-[0.24em] text-white/66" />
           </div>
-          <TitleBreath text={slide.title} size={64} />
+          {!isGroup ? <TitleBreath text={slide.title} size={64} /> : null}
         </div>
         {slide.totalSections ? (
           <div className="rounded-full border border-white/16 bg-white/12 px-4 py-2 text-sm font-bold text-white/70">

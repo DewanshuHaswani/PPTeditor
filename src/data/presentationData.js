@@ -1,8 +1,10 @@
 export const KAHOOT_LINK = "PASTE_KAHOOT_LINK_HERE";
 
-export const createImagePlaceholder = (caption = "Image Placeholder") => ({
+export const createImagePlaceholder = (caption = "Image Placeholder", subtitle = "Add image details in the edit portal") => ({
   id: crypto.randomUUID(),
   src: "",
+  title: caption,
+  subtitle,
   caption,
   role: "gallery",
   size: "normal",
@@ -10,6 +12,11 @@ export const createImagePlaceholder = (caption = "Image Placeholder") => ({
   position: "center",
   isPlaceholder: true
 });
+
+const createBusinessImages = (items) => items.map(([title, subtitle], index) => ({
+  ...createImagePlaceholder(title, subtitle),
+  size: index === 0 ? "wide" : "normal"
+}));
 
 export const createSection = (title = "Custom Section") => ({
   id: crypto.randomUUID(),
@@ -125,22 +132,25 @@ export const presentationData = {
         {
           id: "arg-business-summary",
           title: "Advance Research Group",
-          layout: "bento",
+          layout: "business-update",
+          businessUpdateVersion: 2,
           visible: true,
           fullSlide: true,
-          text: "Emerging AI research focused on future user experiences, trustworthy media, spatial intelligence and faster model capabilities.",
+          text: "Emerging AI research for future UX, spatial intelligence, trustworthy media and faster model capabilities.",
           bullets: [
-            "2026 mission: accelerate preceding research beyond current boundaries.",
-            "Core themes: Quantum Inspired AI, Spatial Sense AI, Multimodal AI and LLM-led experiences.",
-            "1H focus: Grade A patents, SBPA EA selections and AX initiatives.",
-            "2H direction: dexterous hand research, expanded target tasks and compression-oriented model comparison."
+            "Mission: accelerate preceding research beyond current boundaries.",
+            "Core: Quantum Inspired AI, Spatial Sense AI, Multimodal AI and LLM-led experiences.",
+            "1H: Grade A patents, SBPA EA selections and AX initiatives.",
+            "2H: dexterous hand, expanded target tasks and compression-focused model comparison."
           ],
-          images: [
-            { ...createImagePlaceholder("Quantum Inspired AI visual"), size: "wide" },
-            createImagePlaceholder("Spatial Sense AI visual"),
-            createImagePlaceholder("1H Achievements visual"),
-            createImagePlaceholder("Fast Forward to 2H 2026 visual")
-          ],
+          images: createBusinessImages([
+            ["Quantum Inspired AI", "Pipeline, current results and radar/result view"],
+            ["Spatial Sense AI", "Complex scenes, Isaac Sim/Arena and Cobot SO-101-ARM"],
+            ["Multimodal AI", "Future user experiences across image, speech and context"],
+            ["2026 Mission", "Emerging technology research themes and objectives"],
+            ["1H Achievements", "Patents, SBPA EA selections and AX initiatives"],
+            ["2H 2026 Roadmap", "Dexterous hand, task expansion and model compression"]
+          ]),
           blocks: []
         }
       ]
@@ -155,22 +165,25 @@ export const presentationData = {
         {
           id: "open-innovation-business-summary",
           title: "Open Innovation",
-          layout: "bento",
+          layout: "business-update",
+          businessUpdateVersion: 2,
           visible: true,
           fullSlide: true,
-          text: "Connecting startup ecosystems, Samsung R&D priorities and internal enablement programs into focused innovation pathways.",
+          text: "Connecting startup ecosystems, Samsung R&D priorities and internal enablement into focused innovation pathways.",
           bullets: [
-            "Startup incubation through Samsung Mobile Advance (SMA) 2026.",
-            "Strategic partnership funnel: applications, submitted proposals and pitch day candidates.",
-            "Galaxy Convention 2026 and ongoing discussions with Suwon R&D.",
-            "Translation and interpretation support for smoother cross-team collaboration."
+            "SMA 2026: startup incubation from applications to pitch day candidates.",
+            "Partnerships: submitted proposals, Galaxy Convention 2026 and Suwon R&D discussions.",
+            "Programs: Samsung emovatex 2026 and top-12 visibility.",
+            "Enablement: translation, interpretation and internal process updates."
           ],
-          images: [
-            { ...createImagePlaceholder("Startup incubation funnel"), size: "wide" },
-            createImagePlaceholder("Samsung Mobile Advance timeline"),
-            createImagePlaceholder("Galaxy Convention 2026 table"),
-            createImagePlaceholder("Suwon R&D discussion visual")
-          ],
+          images: createBusinessImages([
+            ["Startup Incubation Funnel", "Applications, proposals and pitch day candidates"],
+            ["Samsung Mobile Advance 2026", "SMA timeline and proposal flow"],
+            ["Galaxy Convention 2026", "Convention table and partner mapping"],
+            ["Suwon R&D Discussions", "Ongoing collaboration opportunities"],
+            ["Samsung emovatex 2026", "Top-12 startup visibility"],
+            ["Team Enablement", "Translation, interpretation and process updates"]
+          ]),
           blocks: []
         }
       ]
@@ -185,22 +198,25 @@ export const presentationData = {
         {
           id: "srg-business-summary",
           title: "Standards Research Group",
-          layout: "bento",
+          layout: "business-update",
+          businessUpdateVersion: 2,
           visible: true,
           fullSlide: true,
-          text: "Driving global standards leadership across next-generation communication technologies, standards IPR and regional initiatives.",
+          text: "Driving global standards leadership across next-generation communications, standards IPR and regional initiatives.",
           bullets: [
             "Mission: secure key global standards leadership positions.",
-            "Technology leadership in 3GPP 6G and IEEE Wi-Fi areas.",
-            "Strengthening the innovation portfolio through standards IPR and papers.",
-            "1H highlights: global contributions, rapporteur-ship roles and Hall of Fame recognition."
+            "Technology: 3GPP 6G and IEEE Wi-Fi contributions.",
+            "Portfolio: standards IPR, papers and regional initiatives.",
+            "Recognition: rapporteur-ship roles, Hall of Fame and 1H achievements."
           ],
-          images: [
-            { ...createImagePlaceholder("Global standards visual"), size: "wide" },
-            createImagePlaceholder("1H Achievements visual"),
-            createImagePlaceholder("Standards IPR visual"),
-            createImagePlaceholder("Hall of Fame visual")
-          ],
+          images: createBusinessImages([
+            ["Mission & Objectives", "Global standards leadership positions"],
+            ["3GPP 6G Areas", "Next-generation communication standards"],
+            ["IEEE Wi-Fi Areas", "Technology leadership and contribution themes"],
+            ["Standards IPR", "Innovation portfolio and patent direction"],
+            ["1H Achievements", "Technical contributions and papers submitted"],
+            ["Hall of Fame", "Recognition and rapporteur-ship highlights"]
+          ]),
           blocks: []
         }
       ]
@@ -215,16 +231,20 @@ export const presentationData = {
         {
           id: "ip-business-summary",
           title: "IP Group",
-          layout: "bento",
+          layout: "business-update",
+          businessUpdateVersion: 2,
           visible: true,
           fullSlide: true,
           text: "ADD_IP_GROUP_TEXT_HERE",
           bullets: ["Overview", "Past Work", "Business Impact", "Hall of Fame", "Fast Forward to 2nd Half"],
-          images: [
-            { ...createImagePlaceholder("IP overview image placeholder"), size: "wide" },
-            createImagePlaceholder("Patent / diagram placeholder"),
-            createImagePlaceholder("Business impact visual placeholder")
-          ],
+          images: createBusinessImages([
+            ["Overview", "Add IP Group overview image"],
+            ["Past Work", "Add prior work or portfolio visual"],
+            ["Business Impact", "Add impact summary or chart"],
+            ["Hall of Fame", "Add recognition image"],
+            ["Fast Forward", "Add 2nd half direction"],
+            ["Diagram Placeholder", "Add patent/process/portfolio diagram"]
+          ]),
           blocks: []
         }
       ]
@@ -239,22 +259,25 @@ export const presentationData = {
         {
           id: "people-business-summary",
           title: "People Group",
-          layout: "bento",
+          layout: "business-update",
+          businessUpdateVersion: 2,
           visible: true,
           fullSlide: true,
-          text: "People updates focused on development conversations, team participation and everyday workplace flexibility.",
+          text: "People updates focused on development conversations, team participation and workplace flexibility.",
           bullets: [
-            "Competency Assessment and Mid-Year Feedback 2026 enable meaningful development conversations.",
-            "Feedback connects competency discussion, mid-year goal progress and IDPs.",
-            "SRIB SSL2026: ARST and CST joined forces as Research Communication Blasters.",
-            "Meal card access changes from Monday-Friday to Monday-Saturday with no time restriction."
+            "Competency Assessment and Mid-Year Feedback 2026 support meaningful development conversations.",
+            "Managers connect competency feedback, mid-year goal progress and IDPs.",
+            "SRIB SSL2026: ARST and CST joined as Research Communication Blasters.",
+            "Meal card access expands to Monday-Saturday with no time restriction."
           ],
-          images: [
-            { ...createImagePlaceholder("People Group overview image"), size: "wide" },
-            createImagePlaceholder("Competency Assessment timeline image"),
-            createImagePlaceholder("SRIB SSL2026 sports table image"),
-            createImagePlaceholder("Meal Card Usage Window image")
-          ],
+          images: createBusinessImages([
+            ["People Overview", "Development, team connection and flexibility"],
+            ["Competency Assessment", "Timeline and assessment flow"],
+            ["Mid-Year Feedback", "Workday feedback and IDP conversion"],
+            ["Rating Definition", "Level 1 to Level 5 competency scale"],
+            ["SRIB SSL2026", "Research Communication Blasters participation"],
+            ["Meal Card Flexibility", "Monday-Saturday and no time restriction"]
+          ]),
           blocks: []
         }
       ]

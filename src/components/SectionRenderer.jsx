@@ -7,7 +7,6 @@ import {
   CircleDot,
   Clapperboard,
   FileQuestion,
-  Image as ImageIcon,
   Layers3,
   Mic2,
   MessageCircle,
@@ -91,10 +90,21 @@ function Placeholder({ caption }) {
   return (
     <Rise>
       <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="none" shadowIntensity="xs" className="flex min-h-44 min-w-0 flex-col items-center justify-center overflow-hidden border border-dashed border-white/30 bg-white/10 p-6 text-center text-white/70">
-        <ImageIcon className="mb-3 h-9 w-9" />
         <RevealCopy text={caption || "Image Placeholder"} className="text-sm font-semibold" />
       </LiquidGlassCard>
     </Rise>
+  );
+}
+
+function ImageCaption({ image }) {
+  const title = image?.title || image?.caption;
+  const subtitle = image?.subtitle;
+  if (!title && !subtitle) return null;
+  return (
+    <figcaption className="border-t border-white/10 bg-slate-950/35 px-4 py-3 text-white/78">
+      {title ? <RevealCopy text={title} className="text-sm font-black leading-tight text-white/88" /> : null}
+      {subtitle ? <RevealCopy text={subtitle} className="mt-1 text-xs font-semibold leading-snug text-white/55" /> : null}
+    </figcaption>
   );
 }
 
@@ -103,12 +113,25 @@ function ImageTile({ image, large = false }) {
   return (
     <motion.figure initial={{ opacity: 0, y: 22, scale: 0.98, filter: "blur(5px)" }} animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }} transition={riseTransition} className={`min-w-0 overflow-hidden rounded-[28px] border border-white/15 bg-white/10 shadow-glass ${imageHeightClass(image, large)}`}>
       <img src={image.src} alt={image.caption || "Uploaded content"} className="h-full min-h-[inherit] w-full" style={imageStyle(image)} loading="lazy" />
-      {image.caption ? (
-        <figcaption className="border-t border-white/10 bg-slate-950/35 px-4 py-2 text-sm text-white/78">
-          <RevealCopy text={image.caption} className="text-sm text-white/78" />
-        </figcaption>
-      ) : null}
+      <ImageCaption image={image} />
     </motion.figure>
+  );
+}
+
+function BusinessImageCard({ image, index }) {
+  return (
+    <Rise index={index}>
+      <motion.figure initial={{ opacity: 0, y: 18, scale: 0.985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={riseTransition} className="min-w-0 overflow-hidden rounded-[24px] border border-white/14 bg-white/10 shadow-glass">
+        <div className="flex aspect-[16/9] items-center justify-center bg-white/[0.07]">
+          {image?.src ? (
+            <img src={image.src} alt={image.title || image.caption || "Business update image"} className="h-full w-full" style={imageStyle(image)} loading="lazy" />
+          ) : (
+            <div className="h-full w-full border border-dashed border-white/20 bg-[linear-gradient(135deg,rgba(255,255,255,0.14),rgba(255,255,255,0.03))]" />
+          )}
+        </div>
+        <ImageCaption image={image} />
+      </motion.figure>
+    </Rise>
   );
 }
 
@@ -215,6 +238,38 @@ function Bento({ section }) {
           </LiquidGlassCard>
         </Rise>
       ))}
+    </div>
+  );
+}
+
+function BusinessUpdate({ section }) {
+  const images = [...(section.images || [])];
+  while (images.length < 6) {
+    images.push({ id: `placeholder-${images.length}`, title: `Image ${images.length + 1}`, subtitle: "Add image title and subtitle in the edit portal", caption: `Image ${images.length + 1}` });
+  }
+  const visibleImages = images.slice(0, 6);
+  const bullets = section.bullets?.length ? section.bullets : textLines(section.text);
+
+  return (
+    <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-[0.72fr_1.28fr]">
+      <Rise>
+        <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="xs" shadowIntensity="xs" className="flex h-full min-w-0 flex-col overflow-hidden border border-white/16 bg-white/12 p-5 shadow-glass">
+          {section.text && !section.text.includes("ADD_") ? <RevealCopy text={section.text} className="text-lg font-black leading-snug text-white/92 xl:text-xl" /> : null}
+          <div className="mt-4 grid gap-3">
+            {bullets.map((bullet, index) => (
+              <div key={bullet + index} className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3">
+                <div className="mb-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-100/55">{String(index + 1).padStart(2, "0")}</div>
+                <RevealCopy text={bullet} className="text-sm font-semibold leading-snug text-white/82 xl:text-base" />
+              </div>
+            ))}
+          </div>
+        </LiquidGlassCard>
+      </Rise>
+      <div className="grid min-w-0 grid-cols-2 gap-3 xl:grid-cols-3">
+        {visibleImages.map((image, index) => (
+          <BusinessImageCard key={image.id || index} image={image} index={index} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -531,6 +586,7 @@ function ObjectLayout({ section }) {
 export function SectionRenderer({ section }) {
   if (section.blocks?.some((block) => block.visible !== false)) return <ObjectLayout section={section} />;
   const layout = resolveLayout(section);
+  if (layout === "business-update") return <BusinessUpdate section={section} />;
   if (layout === "steps") return <Steps section={section} />;
   if (layout === "bento") return <Bento section={section} />;
   if (layout === "text-heavy") return <TextHeavy section={section} />;

@@ -10,6 +10,7 @@ export const themeMap = {
 
 export const layoutOptions = [
   "auto",
+  "business-update",
   "bento",
   "steps",
   "text-cards",
