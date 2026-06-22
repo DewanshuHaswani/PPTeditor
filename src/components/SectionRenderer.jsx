@@ -690,9 +690,9 @@ function ObjectLayout({ section }) {
 }
 
 export function SectionRenderer({ section }) {
-  if (section.blocks?.some((block) => block.visible !== false)) return <ObjectLayout section={section} />;
   const layout = resolveLayout(section);
   if (layout === "business-update") return <BusinessUpdate section={section} />;
+  if (section.blocks?.some((block) => block.visible !== false)) return <ObjectLayout section={section} />;
   if (layout === "steps") return <Steps section={section} />;
   if (layout === "bento") return <Bento section={section} />;
   if (layout === "text-heavy") return <TextHeavy section={section} />;

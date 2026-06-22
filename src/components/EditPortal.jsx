@@ -54,6 +54,42 @@ function objectIcon(type) {
   return <Text className="h-4 w-4" />;
 }
 
+function syncBusinessSectionFromBlocks(section, blocks) {
+  if (section.layout !== "business-update") return { ...section, blocks };
+
+  const visibleBlocks = blocks.filter((block) => block.visible !== false);
+  const textLikeBlocks = visibleBlocks.filter((block) => ["text", "quote", "metric"].includes(block.type));
+  const textBlock = textLikeBlocks.find((block) => block.title === "Text") || textLikeBlocks[0];
+  const bulletBlock = visibleBlocks.find((block) => block.type === "bullets");
+  const detailBlocks = textLikeBlocks.filter((block) => block !== textBlock);
+  const imageBlocks = visibleBlocks.filter((block) => block.type === "image");
+
+  const next = { ...section, blocks };
+
+  if (textBlock) next.text = textBlock.text || "";
+  if (bulletBlock?.bullets?.length) next.bullets = bulletBlock.bullets;
+  else if (detailBlocks.length) next.bullets = detailBlocks.map((block) => block.title || block.text || "Business update").filter(Boolean);
+
+  if (detailBlocks.length) next.details = detailBlocks.map((block) => block.text || block.title || "");
+
+  if (imageBlocks.length) {
+    next.images = imageBlocks.map((block, index) => ({
+      ...(block.image || createImagePlaceholder(block.title || `Image ${index + 1}`)),
+      id: block.image?.id || block.id || crypto.randomUUID(),
+      title: block.image?.title || block.title || `Image ${index + 1}`,
+      subtitle: block.image?.subtitle || block.caption || "",
+      details: block.image?.details || "",
+      caption: block.image?.caption || block.caption || block.title || `Image ${index + 1}`,
+      size: block.image?.size || block.size || "normal",
+      fit: block.image?.fit || "cover",
+      position: block.image?.position || "center",
+      expandable: block.image?.expandable !== false
+    }));
+  }
+
+  return next;
+}
+
 export function EditPortal({ data, actions }) {
   const [selectedSlideId, setSelectedSlideId] = useState(data.slides[0]?.id);
   const [selectedSectionId, setSelectedSectionId] = useState(data.slides[0]?.sections?.[0]?.id);
@@ -191,18 +227,12 @@ export function EditPortal({ data, actions }) {
   };
 
   const setBlock = (blockIndex, updater) => {
-    setSection((section) => ({
-      ...section,
-      blocks: updateAt(materializeBlocks(section), blockIndex, updater)
-    }));
+    setSection((section) => syncBusinessSectionFromBlocks(section, updateAt(materializeBlocks(section), blockIndex, updater)));
   };
 
   const addBlock = (type = "text") => {
     const block = createContentBlock(type);
-    setSection((section) => ({
-      ...section,
-      blocks: [...materializeBlocks(section), block]
-    }));
+    setSection((section) => syncBusinessSectionFromBlocks(section, [...materializeBlocks(section), block]));
   };
 
   const duplicateBlock = (blockIndex) => {
@@ -213,15 +243,12 @@ export function EditPortal({ data, actions }) {
       copy.title = `${copy.title || "Object"} Copy`;
       const next = [...blocks];
       next.splice(blockIndex + 1, 0, copy);
-      return { ...section, blocks: next };
+      return syncBusinessSectionFromBlocks(section, next);
     });
   };
 
   const deleteBlock = (blockIndex) => {
-    setSection((section) => ({
-      ...section,
-      blocks: materializeBlocks(section).filter((_, index) => index !== blockIndex)
-    }));
+    setSection((section) => syncBusinessSectionFromBlocks(section, materializeBlocks(section).filter((_, index) => index !== blockIndex)));
   };
 
   const convertBlock = (blockIndex, type) => {
@@ -489,7 +516,7 @@ export function EditPortal({ data, actions }) {
                         const blocks = [...materializeBlocks(section)];
                         const [removed] = blocks.splice(oldIndex, 1);
                         blocks.splice(newIndex, 0, removed);
-                        return { ...section, blocks };
+                        return syncBusinessSectionFromBlocks(section, blocks);
                       });
                     }}
                     className="space-y-3"
