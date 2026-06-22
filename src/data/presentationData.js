@@ -10,7 +10,7 @@ export const createImagePlaceholder = (caption = "Image Placeholder", subtitle =
   caption,
   role: "gallery",
   size: "normal",
-  fit: "cover",
+  fit: "contain",
   position: "center",
   isPlaceholder: true
 });

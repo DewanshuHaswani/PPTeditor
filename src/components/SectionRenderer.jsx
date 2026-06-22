@@ -142,7 +142,7 @@ function BusinessImageCard({ image, index, onExpand, expandable = true, compact 
       >
         <div className={`flex ${fill ? "min-h-0 flex-1" : compact ? "aspect-[5/3]" : "aspect-[16/9]"} items-center justify-center bg-white/[0.07]`}>
           {image?.src ? (
-            <img src={image.src} alt={image.title || image.caption || "Business update image"} className="h-full w-full" style={imageStyle(image)} loading="lazy" />
+            <img src={image.src} alt={image.title || image.caption || "Business update image"} className="h-full w-full" style={{ ...imageStyle(image), objectFit: "contain" }} loading="lazy" />
           ) : (
             <div className="h-full w-full border border-dashed border-white/20 bg-[linear-gradient(135deg,rgba(255,255,255,0.14),rgba(255,255,255,0.03))]" />
           )}

@@ -81,7 +81,7 @@ function syncBusinessSectionFromBlocks(section, blocks) {
       details: block.image?.details || "",
       caption: block.image?.caption || block.caption || block.title || `Image ${index + 1}`,
       size: block.image?.size || block.size || "normal",
-      fit: block.image?.fit || "cover",
+      fit: block.image?.fit || "contain",
       position: block.image?.position || "center",
       expandable: block.image?.expandable !== false
     }));
@@ -205,7 +205,7 @@ export function EditPortal({ data, actions }) {
         caption: imageIndex === null ? file.name : images[imageIndex]?.caption || file.name,
         role: imageIndex === null ? "gallery" : images[imageIndex]?.role || "gallery",
         size: imageIndex === null ? "normal" : images[imageIndex]?.size || "normal",
-        fit: imageIndex === null ? "cover" : images[imageIndex]?.fit || "cover",
+        fit: imageIndex === null ? "contain" : images[imageIndex]?.fit || "contain",
         position: imageIndex === null ? "center" : images[imageIndex]?.position || "center",
         isPlaceholder: false
       };
@@ -593,7 +593,7 @@ export function EditPortal({ data, actions }) {
                                       src={block.image.src}
                                       alt={block.caption || block.title}
                                       className="h-full w-full"
-                                      style={{ objectFit: block.image?.fit || "cover", objectPosition: block.image?.position || "center" }}
+                                      style={{ objectFit: block.image?.fit || "contain", objectPosition: block.image?.position || "center" }}
                                     />
                                   ) : (
                                     <LayoutGrid className="h-9 w-9 text-slate-300" />
@@ -607,7 +607,7 @@ export function EditPortal({ data, actions }) {
                                   </div>
                                   <TextInput label="Image Detail" value={block.image?.details || ""} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, details: value } : { ...createImagePlaceholder(item.title || "Image Object"), details: value } }))} textarea rows={3} />
                                   <div className="grid gap-3 md:grid-cols-2">
-                                    <SelectInput label="Image Fit" value={block.image?.fit || "cover"} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, fit: value } : { ...createImagePlaceholder(item.title || "Image Object"), fit: value } }))} options={imageFitOptions} />
+                                    <SelectInput label="Image Fit" value={block.image?.fit || "contain"} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, fit: value } : { ...createImagePlaceholder(item.title || "Image Object"), fit: value } }))} options={imageFitOptions} />
                                     <SelectInput label="Crop Position" value={block.image?.position || "center"} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, position: value } : { ...createImagePlaceholder(item.title || "Image Object"), position: value } }))} options={imagePositionOptions} />
                                   </div>
                                   <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white">
@@ -727,7 +727,7 @@ export function EditPortal({ data, actions }) {
                                 src={image.src}
                                 alt={image.caption}
                                 className="h-full w-full"
-                                style={{ objectFit: image.fit || "cover", objectPosition: image.position || "center" }}
+                                style={{ objectFit: image.fit || "contain", objectPosition: image.position || "center" }}
                               />
                             ) : (
                               <LayoutGrid className="h-8 w-8 text-slate-300" />
@@ -793,7 +793,7 @@ export function EditPortal({ data, actions }) {
                             />
                             <SelectInput
                               label="Image Fit"
-                              value={image.fit || "cover"}
+                              value={image.fit || "contain"}
                               onChange={(value) =>
                                 setSection((section) => ({
                                   ...section,
