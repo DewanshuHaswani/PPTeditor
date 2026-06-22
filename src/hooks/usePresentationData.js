@@ -47,7 +47,11 @@ export function usePresentationData() {
   });
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      // Explicit Save Changes reports storage failures; autosave should not break editing.
+    }
   }, [data]);
 
   useEffect(() => {
@@ -80,10 +84,22 @@ export function usePresentationData() {
     () => ({
       setData,
       save: () => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        window.dispatchEvent(new Event(SAVE_EVENT));
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+          window.dispatchEvent(new Event(SAVE_EVENT));
+          return { ok: true, message: "All presentation changes saved." };
+        } catch (error) {
+          return {
+            ok: false,
+            message: error instanceof Error ? error.message : "Unable to save changes."
+          };
+        }
       },
-      reset: () => setData(cloneData(presentationData)),
+      reset: () => {
+        const nextData = cloneData(presentationData);
+        setData(nextData);
+        return nextData;
+      },
       exportJson: () => {
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);

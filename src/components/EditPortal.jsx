@@ -94,6 +94,7 @@ export function EditPortal({ data, actions }) {
   const [selectedSlideId, setSelectedSlideId] = useState(data.slides[0]?.id);
   const [selectedSectionId, setSelectedSectionId] = useState(data.slides[0]?.sections?.[0]?.id);
   const [imageCountDraft, setImageCountDraft] = useState("");
+  const [saveNotice, setSaveNotice] = useState(null);
   const importRef = useRef(null);
   const selectedSlideIndex = Math.max(0, data.slides.findIndex((slide) => slide.id === selectedSlideId));
   const selectedSlide = data.slides[selectedSlideIndex] || data.slides[0];
@@ -103,6 +104,12 @@ export function EditPortal({ data, actions }) {
   useEffect(() => {
     setImageCountDraft(String(selectedSection?.images?.length || 0));
   }, [selectedSection?.id, selectedSection?.images?.length]);
+
+  useEffect(() => {
+    if (!saveNotice) return undefined;
+    const timer = window.setTimeout(() => setSaveNotice(null), saveNotice.type === "success" ? 2800 : 5200);
+    return () => window.clearTimeout(timer);
+  }, [saveNotice]);
 
   const previewSlide = useMemo(() => {
     if (!selectedSlide) return flattenSlides(data)[0];
@@ -221,6 +228,15 @@ export function EditPortal({ data, actions }) {
     });
   };
 
+  const handleSave = () => {
+    const result = actions.save();
+    if (result?.ok) {
+      setSaveNotice({ type: "success", title: "Saved", message: "All presentation changes are saved and available in /present." });
+      return;
+    }
+    setSaveNotice({ type: "error", title: "Save failed", message: result?.message || "Unable to save changes." });
+  };
+
   const materializeBlocks = (section) => {
     if (section.blocks?.length) return section.blocks;
     return legacySectionBlocks(section).map((block) => ({ ...block, id: crypto.randomUUID() }));
@@ -297,6 +313,25 @@ export function EditPortal({ data, actions }) {
 
   return (
     <main className="min-h-screen bg-[#eef2f7] text-slate-950">
+      {saveNotice ? (
+        <div className="fixed right-5 top-5 z-[100] w-[min(420px,calc(100vw-2.5rem))]" role="status" aria-live="polite">
+          <div
+            className={`rounded-[24px] border p-4 shadow-2xl backdrop-blur-xl ${
+              saveNotice.type === "success" ? "border-emerald-200 bg-emerald-50/96 text-emerald-950" : "border-rose-200 bg-rose-50/96 text-rose-950"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-sm font-black uppercase tracking-[0.14em]">{saveNotice.title}</div>
+                <div className="mt-1 text-sm font-semibold leading-relaxed">{saveNotice.message}</div>
+              </div>
+              <button type="button" onClick={() => setSaveNotice(null)} className="rounded-full bg-white/70 px-2 py-1 text-xs font-black">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <div className="grid min-h-screen grid-cols-1 xl:grid-cols-[320px_1fr]">
         <aside className="border-r border-slate-200 bg-white/85 p-4 backdrop-blur-xl">
           <div className="mb-5 flex items-center justify-between">
@@ -390,12 +425,15 @@ export function EditPortal({ data, actions }) {
               </div>
 
               <div className="mt-5 flex flex-wrap gap-2">
-                <GlassButton variant="light" onClick={actions.save}>
+                <GlassButton variant="light" onClick={handleSave}>
                   <Save className="h-4 w-4" /> Save Changes
                 </GlassButton>
                 <GlassButton variant="light" onClick={actions.reset}>
                   Reset to Default
                 </GlassButton>
+                <div className="w-full text-xs font-semibold text-slate-500">
+                  One Save Changes button saves the entire presentation, including all slides, sections, business updates, images, and layout settings.
+                </div>
               </div>
             </LiquidGlassCard>
 
