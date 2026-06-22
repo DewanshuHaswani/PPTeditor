@@ -3,7 +3,72 @@ import { cloneData } from "../utils/layout";
 import { presentationData } from "../data/presentationData";
 
 const STORAGE_KEY = "ahm-premium-presentation-data";
+const STORAGE_SIGNAL_KEY = "ahm-premium-presentation-data-signal";
 const SAVE_EVENT = "ahm-premium-presentation-data-saved";
+const DB_NAME = "ahm-premium-presentation-db";
+const DB_VERSION = 1;
+const STORE_NAME = "presentation";
+const DATA_KEY = "current";
+
+function openPresentationDb() {
+  return new Promise((resolve, reject) => {
+    if (!("indexedDB" in window)) {
+      reject(new Error("IndexedDB is not available in this browser."));
+      return;
+    }
+
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error("Unable to open IndexedDB."));
+  });
+}
+
+async function readIndexedData() {
+  const db = await openPresentationDb();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, "readonly");
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.get(DATA_KEY);
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error || new Error("Unable to read saved presentation."));
+    transaction.oncomplete = () => db.close();
+  });
+}
+
+async function writeIndexedData(data) {
+  const db = await openPresentationDb();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, "readwrite");
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.put(data, DATA_KEY);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error || new Error("Unable to save presentation."));
+    transaction.oncomplete = () => db.close();
+  });
+}
+
+function readLegacyData() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSaveSignal() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem(STORAGE_SIGNAL_KEY, String(Date.now()));
+  } catch {
+    // If legacy localStorage is already over quota, IndexedDB still has the data.
+  }
+  window.dispatchEvent(new Event(SAVE_EVENT));
+}
 
 function migratePresentationData(data) {
   const copy = cloneData(data);
@@ -40,8 +105,8 @@ export function usePresentationData() {
   const canPersist = typeof window !== "undefined" && window.location.pathname === "/edit";
   const [data, setData] = useState(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? migratePresentationData(JSON.parse(saved)) : cloneData(presentationData);
+      const saved = readLegacyData();
+      return saved ? migratePresentationData(saved) : cloneData(presentationData);
     } catch {
       return cloneData(presentationData);
     }
@@ -49,25 +114,32 @@ export function usePresentationData() {
 
   useEffect(() => {
     if (!canPersist) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch {
+    writeIndexedData(data).catch(() => {
       // Explicit Save Changes reports storage failures; autosave should not break editing.
-    }
+    });
   }, [canPersist, data]);
 
   useEffect(() => {
-    const loadSavedData = (rawValue) => {
-      if (!rawValue) return;
+    const loadSavedData = async (rawValue) => {
       try {
-        setData(migratePresentationData(JSON.parse(rawValue)));
+        const indexedData = await readIndexedData();
+        if (indexedData) {
+          setData(migratePresentationData(indexedData));
+          return;
+        }
+        if (rawValue) setData(migratePresentationData(JSON.parse(rawValue)));
       } catch {
-        // Ignore malformed local edits and keep the current presentation open.
+        try {
+          const legacyData = readLegacyData();
+          if (legacyData) setData(migratePresentationData(legacyData));
+        } catch {
+          // Ignore malformed local edits and keep the current presentation open.
+        }
       }
     };
 
     const onStorage = (event) => {
-      if (event.key === STORAGE_KEY) loadSavedData(event.newValue);
+      if (event.key === STORAGE_SIGNAL_KEY || event.key === STORAGE_KEY) loadSavedData(event.newValue);
     };
 
     const onSaved = () => {
@@ -83,6 +155,7 @@ export function usePresentationData() {
     window.addEventListener("focus", onSaved);
     window.addEventListener("pageshow", onSaved);
     document.addEventListener("visibilitychange", onVisible);
+    onSaved();
     return () => {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener(SAVE_EVENT, onSaved);
@@ -95,10 +168,10 @@ export function usePresentationData() {
   const actions = useMemo(
     () => ({
       setData,
-      save: () => {
+      save: async () => {
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-          window.dispatchEvent(new Event(SAVE_EVENT));
+          await writeIndexedData(data);
+          writeSaveSignal();
           return { ok: true, message: "All presentation changes saved." };
         } catch (error) {
           return {

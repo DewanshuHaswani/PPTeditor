@@ -228,8 +228,8 @@ export function EditPortal({ data, actions }) {
     });
   };
 
-  const handleSave = () => {
-    const result = actions.save();
+  const handleSave = async () => {
+    const result = await actions.save();
     if (result?.ok) {
       setSaveNotice({ type: "success", title: "Saved", message: "All presentation changes are saved and available in /present." });
       return;
