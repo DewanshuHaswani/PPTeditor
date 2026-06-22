@@ -16,11 +16,13 @@ import {
   UsersRound
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { BentoGridShowcase } from "@/components/ui/bento-product-features";
 import { BlurredStagger } from "@/components/ui/blurred-stagger-text";
-import FeatureShaderCards from "@/components/ui/feature-shader-cards";
 import { LiquidGlassCard } from "@/components/ui/liquid-weather-glass";
 import { resolveLayout } from "../utils/layout";
+
+const FeatureShaderCards = lazy(() => import("@/components/ui/feature-shader-cards"));
 
 const riseTransition = { duration: 0.36, ease: [0.22, 1, 0.36, 1] };
 
@@ -76,7 +78,7 @@ function Rise({ children, index = 0, className = "" }) {
 function RevealCopy({ text, className = "", stagger = 0.01 }) {
   if (!text) return null;
   const safeClassName = `min-w-0 max-w-full break-words [overflow-wrap:anywhere] ${className}`;
-  if (String(text).length > 220) {
+  if (String(text).length > 90) {
     return (
       <motion.p initial={{ opacity: 0, y: 14, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={riseTransition} className={safeClassName}>
         {text}
@@ -84,6 +86,15 @@ function RevealCopy({ text, className = "", stagger = 0.01 }) {
     );
   }
   return <BlurredStagger text={String(text)} stagger={stagger} textClassName={safeClassName} />;
+}
+
+function FastCopy({ text, className = "" }) {
+  if (!text) return null;
+  return (
+    <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={riseTransition} className={`min-w-0 max-w-full break-words [overflow-wrap:anywhere] ${className}`}>
+      {text}
+    </motion.p>
+  );
 }
 
 function Placeholder({ caption }) {
@@ -96,14 +107,15 @@ function Placeholder({ caption }) {
   );
 }
 
-function ImageCaption({ image }) {
+function ImageCaption({ image, fast = false }) {
   const title = image?.title || image?.caption;
   const subtitle = image?.subtitle;
   if (!title && !subtitle) return null;
+  const Copy = fast ? FastCopy : RevealCopy;
   return (
     <figcaption className="border-t border-white/10 bg-slate-950/35 px-4 py-3 text-white/78">
-      {title ? <RevealCopy text={title} className="text-sm font-black leading-tight text-white/88" /> : null}
-      {subtitle ? <RevealCopy text={subtitle} className="mt-1 text-xs font-semibold leading-snug text-white/55" /> : null}
+      {title ? <Copy text={title} className="text-sm font-black leading-tight text-white/88" /> : null}
+      {subtitle ? <Copy text={subtitle} className="mt-1 text-xs font-semibold leading-snug text-white/55" /> : null}
     </figcaption>
   );
 }
@@ -118,10 +130,16 @@ function ImageTile({ image, large = false }) {
   );
 }
 
-function BusinessImageCard({ image, index }) {
+function BusinessImageCard({ image, index, onExpand, expandable = true }) {
   return (
     <Rise index={index}>
-      <motion.figure initial={{ opacity: 0, y: 18, scale: 0.985 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={riseTransition} className="min-w-0 overflow-hidden rounded-[24px] border border-white/14 bg-white/10 shadow-glass">
+      <motion.figure
+        initial={{ opacity: 0, y: 18, scale: 0.985 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={riseTransition}
+        onClick={() => expandable && onExpand?.({ type: "image", image, title: image?.title || image?.caption, subtitle: image?.subtitle, details: image?.details })}
+        className={`min-w-0 overflow-hidden rounded-[24px] border border-white/14 bg-white/10 shadow-glass ${expandable ? "cursor-pointer transition hover:border-white/28 hover:bg-white/14" : ""}`}
+      >
         <div className="flex aspect-[16/9] items-center justify-center bg-white/[0.07]">
           {image?.src ? (
             <img src={image.src} alt={image.title || image.caption || "Business update image"} className="h-full w-full" style={imageStyle(image)} loading="lazy" />
@@ -129,9 +147,46 @@ function BusinessImageCard({ image, index }) {
             <div className="h-full w-full border border-dashed border-white/20 bg-[linear-gradient(135deg,rgba(255,255,255,0.14),rgba(255,255,255,0.03))]" />
           )}
         </div>
-        <ImageCaption image={image} />
+        <ImageCaption image={image} fast />
       </motion.figure>
     </Rise>
+  );
+}
+
+function BusinessDetailOverlay({ item, onClose }) {
+  useEffect(() => {
+    const onKey = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  if (!item) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/72 p-6 backdrop-blur-xl" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, y: 18, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 12, scale: 0.98 }}
+        transition={riseTransition}
+        onClick={(event) => event.stopPropagation()}
+        className="max-h-[86vh] w-full max-w-5xl overflow-hidden rounded-[34px] border border-white/18 bg-slate-950/88 shadow-glow"
+      >
+        {item.type === "image" && item.image?.src ? (
+          <div className="max-h-[58vh] bg-black/30">
+            <img src={item.image.src} alt={item.title || "Expanded image"} className="max-h-[58vh] w-full object-contain" />
+          </div>
+        ) : null}
+        <div className="p-7">
+          {item.kicker ? <div className="mb-3 text-xs font-black uppercase tracking-[0.24em] text-cyan-100/60">{item.kicker}</div> : null}
+          <h3 className="text-3xl font-black leading-tight text-white">{item.title || "Details"}</h3>
+          {item.subtitle ? <p className="mt-2 text-lg font-semibold text-white/62">{item.subtitle}</p> : null}
+          {item.details ? <p className="mt-5 whitespace-pre-wrap text-lg leading-relaxed text-white/82">{item.details}</p> : null}
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
@@ -243,34 +298,44 @@ function Bento({ section }) {
 }
 
 function BusinessUpdate({ section }) {
+  const [expandedItem, setExpandedItem] = useState(null);
   const images = [...(section.images || [])];
   while (images.length < 6) {
-    images.push({ id: `placeholder-${images.length}`, title: `Image ${images.length + 1}`, subtitle: "Add image title and subtitle in the edit portal", caption: `Image ${images.length + 1}` });
+    images.push({ id: `placeholder-${images.length}`, title: `Image ${images.length + 1}`, subtitle: "Add image title and subtitle in the edit portal", details: "Upload an image and add further information from the edit portal.", caption: `Image ${images.length + 1}`, expandable: true });
   }
-  const visibleImages = images.slice(0, 6);
   const bullets = section.bullets?.length ? section.bullets : textLines(section.text);
+  const details = section.details || [];
+  const canExpand = section.expandable !== false;
 
   return (
-    <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-[0.72fr_1.28fr]">
-      <Rise>
-        <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="xs" shadowIntensity="xs" className="flex h-full min-w-0 flex-col overflow-hidden border border-white/16 bg-white/12 p-5 shadow-glass">
-          {section.text && !section.text.includes("ADD_") ? <RevealCopy text={section.text} className="text-lg font-black leading-snug text-white/92 xl:text-xl" /> : null}
-          <div className="mt-4 grid gap-3">
-            {bullets.map((bullet, index) => (
-              <div key={bullet + index} className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3">
-                <div className="mb-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-100/55">{String(index + 1).padStart(2, "0")}</div>
-                <RevealCopy text={bullet} className="text-sm font-semibold leading-snug text-white/82 xl:text-base" />
-              </div>
-            ))}
-          </div>
-        </LiquidGlassCard>
-      </Rise>
-      <div className="grid min-w-0 grid-cols-2 gap-3 xl:grid-cols-3">
-        {visibleImages.map((image, index) => (
-          <BusinessImageCard key={image.id || index} image={image} index={index} />
-        ))}
+    <>
+      <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-[0.72fr_1.28fr]">
+        <Rise>
+          <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="xs" shadowIntensity="xs" className="flex h-full min-w-0 flex-col overflow-hidden border border-white/16 bg-white/12 p-5 shadow-glass">
+            {section.text && !section.text.includes("ADD_") ? <FastCopy text={section.text} className="text-lg font-black leading-snug text-white/92 xl:text-xl" /> : null}
+            <div className="mt-4 grid gap-3">
+              {bullets.map((bullet, index) => (
+                <button
+                  type="button"
+                  key={bullet + index}
+                  onClick={() => canExpand && setExpandedItem({ type: "text", kicker: `Update ${String(index + 1).padStart(2, "0")}`, title: bullet, details: details[index] || bullet })}
+                  className={`min-w-0 rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 text-left ${canExpand ? "cursor-pointer transition hover:border-white/24 hover:bg-white/12" : ""}`}
+                >
+                  <div className="mb-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-100/55">{String(index + 1).padStart(2, "0")}</div>
+                  <FastCopy text={bullet} className="text-sm font-semibold leading-snug text-white/82 xl:text-base" />
+                </button>
+              ))}
+            </div>
+          </LiquidGlassCard>
+        </Rise>
+        <div className="grid max-h-[68vh] min-w-0 grid-cols-2 gap-3 overflow-y-auto pr-1 xl:grid-cols-3">
+          {images.map((image, index) => (
+            <BusinessImageCard key={image.id || index} image={image} index={index} expandable={canExpand && image.expandable !== false} onExpand={setExpandedItem} />
+          ))}
+        </div>
       </div>
-    </div>
+      {expandedItem ? <BusinessDetailOverlay item={expandedItem} onClose={() => setExpandedItem(null)} /> : null}
+    </>
   );
 }
 
@@ -293,7 +358,22 @@ function Steps({ section }) {
   }));
 
   if (features.length) {
-    return <FeatureShaderCards features={features} />;
+    return (
+      <Suspense
+        fallback={
+          <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {features.map((feature, index) => (
+              <LiquidGlassCard key={feature.title} draggable={false} borderRadius="28px" glowIntensity="xs" shadowIntensity="xs" className="min-h-44 border border-white/16 bg-white/12 p-5 shadow-glass">
+                <div className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-cyan-100/55">{feature.title}</div>
+                <FastCopy text={feature.description} className="text-base font-semibold leading-snug text-white/86" />
+              </LiquidGlassCard>
+            ))}
+          </div>
+        }
+      >
+        <FeatureShaderCards features={features} />
+      </Suspense>
+    );
   }
 
   return (

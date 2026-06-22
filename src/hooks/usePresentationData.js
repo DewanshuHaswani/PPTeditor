@@ -21,7 +21,7 @@ function migratePresentationData(data) {
     const defaultSlide = defaults.slides.find((item) => item.id === groupId);
     const defaultSummaryId = defaultSlide?.sections?.[0]?.id;
     const currentSummary = slide?.sections?.find((section) => section.id === defaultSummaryId);
-    if (slide && defaultSlide && defaultSummaryId && (!currentSummary || currentSummary.businessUpdateVersion !== 2)) {
+    if (slide && defaultSlide && defaultSummaryId && (!currentSummary || currentSummary.businessUpdateVersion !== 3)) {
       slide.sections = cloneData(defaultSlide.sections);
     }
   });

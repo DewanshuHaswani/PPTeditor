@@ -152,6 +152,8 @@ export function EditPortal({ data, actions }) {
         src,
         title: imageIndex === null ? images[imageIndex]?.title || file.name : images[imageIndex]?.title || file.name,
         subtitle: imageIndex === null ? images[imageIndex]?.subtitle || "" : images[imageIndex]?.subtitle || "",
+        details: imageIndex === null ? images[imageIndex]?.details || "" : images[imageIndex]?.details || "",
+        expandable: imageIndex === null ? true : images[imageIndex]?.expandable !== false,
         caption: imageIndex === null ? file.name : images[imageIndex]?.caption || file.name,
         role: imageIndex === null ? "gallery" : images[imageIndex]?.role || "gallery",
         size: imageIndex === null ? "normal" : images[imageIndex]?.size || "normal",
@@ -232,6 +234,8 @@ export function EditPortal({ data, actions }) {
         src,
         title: block.image?.title || block.title || file.name,
         subtitle: block.image?.subtitle || "",
+        details: block.image?.details || "",
+        expandable: block.image?.expandable !== false,
         caption: block.caption || file.name,
         role: "gallery",
         size: block.image?.size || block.size || "wide",
@@ -410,6 +414,13 @@ export function EditPortal({ data, actions }) {
                     textarea
                     rows={6}
                   />
+                  <TextInput
+                    label="Expanded Details (separate cards with ---)"
+                    value={(selectedSection.details || []).join("\n---\n")}
+                    onChange={(value) => setSection((section) => ({ ...section, details: value.split(/\n---\n/g).map((item) => item.trim()).filter(Boolean) }))}
+                    textarea
+                    rows={6}
+                  />
                   <div className="grid grid-cols-2 gap-3">
                     <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm font-bold">
                       <input type="checkbox" checked={selectedSection.visible !== false} onChange={(event) => setSection((section) => ({ ...section, visible: event.target.checked }))} />
@@ -418,6 +429,10 @@ export function EditPortal({ data, actions }) {
                     <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm font-bold">
                       <input type="checkbox" checked={selectedSection.fullSlide !== false} onChange={(event) => setSection((section) => ({ ...section, fullSlide: event.target.checked }))} />
                       Full slide
+                    </label>
+                    <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm font-bold">
+                      <input type="checkbox" checked={selectedSection.expandable !== false} onChange={(event) => setSection((section) => ({ ...section, expandable: event.target.checked }))} />
+                      Expandable cards
                     </label>
                   </div>
                 </div>
@@ -507,6 +522,7 @@ export function EditPortal({ data, actions }) {
                                     <TextInput label="Image Title" value={block.image?.title || ""} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, title: value } : { ...createImagePlaceholder(item.title || "Image Object"), title: value } }))} />
                                     <TextInput label="Image Subtitle" value={block.image?.subtitle || ""} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, subtitle: value } : { ...createImagePlaceholder(item.title || "Image Object"), subtitle: value } }))} />
                                   </div>
+                                  <TextInput label="Image Detail" value={block.image?.details || ""} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, details: value } : { ...createImagePlaceholder(item.title || "Image Object"), details: value } }))} textarea rows={3} />
                                   <div className="grid gap-3 md:grid-cols-2">
                                     <SelectInput label="Image Fit" value={block.image?.fit || "cover"} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, fit: value } : { ...createImagePlaceholder(item.title || "Image Object"), fit: value } }))} options={imageFitOptions} />
                                     <SelectInput label="Crop Position" value={block.image?.position || "center"} onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, position: value } : { ...createImagePlaceholder(item.title || "Image Object"), position: value } }))} options={imagePositionOptions} />
@@ -545,6 +561,12 @@ export function EditPortal({ data, actions }) {
                                 <input type="checkbox" checked={block.visible !== false} onChange={(event) => setBlock(blockIndex, (item) => ({ ...item, visible: event.target.checked }))} />
                                 Show object
                               </label>
+                              {block.type === "image" ? (
+                                <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold">
+                                  <input type="checkbox" checked={block.image?.expandable !== false} onChange={(event) => setBlock(blockIndex, (item) => ({ ...item, image: item.image ? { ...item.image, expandable: event.target.checked } : { ...createImagePlaceholder(item.title || "Image Object"), expandable: event.target.checked } }))} />
+                                  Expand on click
+                                </label>
+                              ) : null}
                               {!selectedSection.blocks?.length ? (
                                 <button onClick={() => setSection((section) => ({ ...section, blocks: materializeBlocks(section) }))} className="rounded-full border border-indigo-200 bg-white px-4 py-2 text-sm font-bold text-indigo-700">
                                   Make Existing Content Editable
@@ -646,6 +668,20 @@ export function EditPortal({ data, actions }) {
                               }
                             />
                           </div>
+                          <div className="mt-3">
+                            <TextInput
+                              label="Image Detail"
+                              value={image.details || ""}
+                              onChange={(value) =>
+                                setSection((section) => ({
+                                  ...section,
+                                  images: updateAt(section.images || [], imageIndex, (item) => ({ ...item, details: value }))
+                                }))
+                              }
+                              textarea
+                              rows={3}
+                            />
+                          </div>
                           <div className="mt-3 grid gap-3 md:grid-cols-3">
                             <SelectInput
                               label="Size"
@@ -682,6 +718,19 @@ export function EditPortal({ data, actions }) {
                             />
                           </div>
                           <div className="mt-3 flex gap-2">
+                            <label className="flex items-center gap-2 rounded-full bg-white px-3 py-2 text-center text-xs font-black text-slate-700">
+                              <input
+                                type="checkbox"
+                                checked={image.expandable !== false}
+                                onChange={(event) =>
+                                  setSection((section) => ({
+                                    ...section,
+                                    images: updateAt(section.images || [], imageIndex, (item) => ({ ...item, expandable: event.target.checked }))
+                                  }))
+                                }
+                              />
+                              Expand
+                            </label>
                             <label className="flex-1 cursor-pointer rounded-full bg-white px-3 py-2 text-center text-xs font-black text-slate-700">
                               Replace
                               <input type="file" accept="image/*" hidden onChange={(event) => event.target.files?.[0] && handleImageUpload(event.target.files[0], imageIndex)} />

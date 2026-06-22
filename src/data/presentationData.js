@@ -5,6 +5,8 @@ export const createImagePlaceholder = (caption = "Image Placeholder", subtitle =
   src: "",
   title: caption,
   subtitle,
+  details: "",
+  expandable: true,
   caption,
   role: "gallery",
   size: "normal",
@@ -13,8 +15,9 @@ export const createImagePlaceholder = (caption = "Image Placeholder", subtitle =
   isPlaceholder: true
 });
 
-const createBusinessImages = (items) => items.map(([title, subtitle], index) => ({
+const createBusinessImages = (items) => items.map(([title, subtitle, details = ""], index) => ({
   ...createImagePlaceholder(title, subtitle),
+  details,
   size: index === 0 ? "wide" : "normal"
 }));
 
@@ -133,7 +136,8 @@ export const presentationData = {
           id: "arg-business-summary",
           title: "Advance Research Group",
           layout: "business-update",
-          businessUpdateVersion: 2,
+          businessUpdateVersion: 3,
+          expandable: true,
           visible: true,
           fullSlide: true,
           text: "Emerging AI research for future UX, spatial intelligence, trustworthy media and faster model capabilities.",
@@ -143,13 +147,19 @@ export const presentationData = {
             "1H: Grade A patents, SBPA EA selections and AX initiatives.",
             "2H: dexterous hand, expanded target tasks and compression-focused model comparison."
           ],
+          details: [
+            "2026 mission centers on preceding research that moves beyond current technical and experience boundaries.",
+            "Research themes combine Quantum Inspired AI, Spatial Sense AI, Multimodal AI and LLM-led experiences into future product directions.",
+            "1H output is summarized through Grade A patents, SBPA EA selections and AX initiatives.",
+            "2H direction focuses on dexterous hand research, expanded target tasks and compression-oriented model comparison."
+          ],
           images: createBusinessImages([
-            ["Quantum Inspired AI", "Pipeline, current results and radar/result view"],
-            ["Spatial Sense AI", "Complex scenes, Isaac Sim/Arena and Cobot SO-101-ARM"],
-            ["Multimodal AI", "Future user experiences across image, speech and context"],
-            ["2026 Mission", "Emerging technology research themes and objectives"],
-            ["1H Achievements", "Patents, SBPA EA selections and AX initiatives"],
-            ["2H 2026 Roadmap", "Dexterous hand, task expansion and model compression"]
+            ["Quantum Inspired AI", "Pipeline, current results and radar/result view", "Use this slot for Quantum Inspired AI diagrams, pipeline visuals and current-result charts."],
+            ["Spatial Sense AI", "Complex scenes, Isaac Sim/Arena and Cobot SO-101-ARM", "Use this slot for Spatial Sense AI environment, robotics and inference visuals."],
+            ["Multimodal AI", "Future user experiences across image, speech and context", "Use this slot for multimodal user experience concepts or result samples."],
+            ["2026 Mission", "Emerging technology research themes and objectives", "Use this slot for mission/objective visuals and research theme summaries."],
+            ["1H Achievements", "Patents, SBPA EA selections and AX initiatives", "Use this slot for achievement, patent and AX initiative evidence."],
+            ["2H 2026 Roadmap", "Dexterous hand, task expansion and model compression", "Use this slot for roadmap visuals and 2H research direction diagrams."]
           ]),
           blocks: []
         }
@@ -166,7 +176,8 @@ export const presentationData = {
           id: "open-innovation-business-summary",
           title: "Open Innovation",
           layout: "business-update",
-          businessUpdateVersion: 2,
+          businessUpdateVersion: 3,
+          expandable: true,
           visible: true,
           fullSlide: true,
           text: "Connecting startup ecosystems, Samsung R&D priorities and internal enablement into focused innovation pathways.",
@@ -176,13 +187,19 @@ export const presentationData = {
             "Programs: Samsung emovatex 2026 and top-12 visibility.",
             "Enablement: translation, interpretation and internal process updates."
           ],
+          details: [
+            "Samsung Mobile Advance 2026 tracks the startup incubation funnel from applications through proposals and pitch day candidates.",
+            "Strategic partnership updates include submitted proposals, Galaxy Convention 2026 and ongoing Suwon R&D discussions.",
+            "Program highlights include Samsung emovatex 2026 and top-12 startup visibility.",
+            "Enablement updates cover translation, interpretation and internal process improvements."
+          ],
           images: createBusinessImages([
-            ["Startup Incubation Funnel", "Applications, proposals and pitch day candidates"],
-            ["Samsung Mobile Advance 2026", "SMA timeline and proposal flow"],
-            ["Galaxy Convention 2026", "Convention table and partner mapping"],
-            ["Suwon R&D Discussions", "Ongoing collaboration opportunities"],
-            ["Samsung emovatex 2026", "Top-12 startup visibility"],
-            ["Team Enablement", "Translation, interpretation and process updates"]
+            ["Startup Incubation Funnel", "Applications, proposals and pitch day candidates", "Use this slot for funnel charts and candidate pipeline visuals."],
+            ["Samsung Mobile Advance 2026", "SMA timeline and proposal flow", "Use this slot for SMA schedule, stage gates and proposal flow."],
+            ["Galaxy Convention 2026", "Convention table and partner mapping", "Use this slot for Galaxy Convention table or partner mapping screenshots."],
+            ["Suwon R&D Discussions", "Ongoing collaboration opportunities", "Use this slot for discussion status and collaboration opportunity visuals."],
+            ["Samsung emovatex 2026", "Top-12 startup visibility", "Use this slot for emovatex 2026 top-12 startup visuals."],
+            ["Team Enablement", "Translation, interpretation and process updates", "Use this slot for enablement, process and team update visuals."]
           ]),
           blocks: []
         }
@@ -199,7 +216,8 @@ export const presentationData = {
           id: "srg-business-summary",
           title: "Standards Research Group",
           layout: "business-update",
-          businessUpdateVersion: 2,
+          businessUpdateVersion: 3,
+          expandable: true,
           visible: true,
           fullSlide: true,
           text: "Driving global standards leadership across next-generation communications, standards IPR and regional initiatives.",
@@ -209,13 +227,19 @@ export const presentationData = {
             "Portfolio: standards IPR, papers and regional initiatives.",
             "Recognition: rapporteur-ship roles, Hall of Fame and 1H achievements."
           ],
+          details: [
+            "Mission objectives focus on securing key global standards leadership positions.",
+            "Technology leadership is represented through 3GPP 6G and IEEE Wi-Fi contribution areas.",
+            "Innovation portfolio work includes standards IPR, submitted papers and regional initiatives.",
+            "Recognition includes rapporteur-ship roles, Hall of Fame items and 1H achievements."
+          ],
           images: createBusinessImages([
-            ["Mission & Objectives", "Global standards leadership positions"],
-            ["3GPP 6G Areas", "Next-generation communication standards"],
-            ["IEEE Wi-Fi Areas", "Technology leadership and contribution themes"],
-            ["Standards IPR", "Innovation portfolio and patent direction"],
-            ["1H Achievements", "Technical contributions and papers submitted"],
-            ["Hall of Fame", "Recognition and rapporteur-ship highlights"]
+            ["Mission & Objectives", "Global standards leadership positions", "Use this slot for standards mission/objective visuals."],
+            ["3GPP 6G Areas", "Next-generation communication standards", "Use this slot for 3GPP 6G technical contribution visuals."],
+            ["IEEE Wi-Fi Areas", "Technology leadership and contribution themes", "Use this slot for IEEE Wi-Fi standards visuals."],
+            ["Standards IPR", "Innovation portfolio and patent direction", "Use this slot for standards IPR and portfolio visuals."],
+            ["1H Achievements", "Technical contributions and papers submitted", "Use this slot for 1H contribution and paper submission summaries."],
+            ["Hall of Fame", "Recognition and rapporteur-ship highlights", "Use this slot for recognition and rapporteur-ship visuals."]
           ]),
           blocks: []
         }
@@ -232,18 +256,20 @@ export const presentationData = {
           id: "ip-business-summary",
           title: "IP Group",
           layout: "business-update",
-          businessUpdateVersion: 2,
+          businessUpdateVersion: 3,
+          expandable: true,
           visible: true,
           fullSlide: true,
           text: "ADD_IP_GROUP_TEXT_HERE",
           bullets: ["Overview", "Past Work", "Business Impact", "Hall of Fame", "Fast Forward to 2nd Half"],
+          details: ["ADD_IP_GROUP_OVERVIEW_HERE", "ADD_IP_GROUP_PAST_WORK_HERE", "ADD_IP_GROUP_BUSINESS_IMPACT_HERE", "ADD_IP_GROUP_HALL_OF_FAME_HERE", "ADD_IP_GROUP_2H_DIRECTION_HERE"],
           images: createBusinessImages([
-            ["Overview", "Add IP Group overview image"],
-            ["Past Work", "Add prior work or portfolio visual"],
-            ["Business Impact", "Add impact summary or chart"],
-            ["Hall of Fame", "Add recognition image"],
-            ["Fast Forward", "Add 2nd half direction"],
-            ["Diagram Placeholder", "Add patent/process/portfolio diagram"]
+            ["Overview", "Add IP Group overview image", "Add image details for IP Group overview."],
+            ["Past Work", "Add prior work or portfolio visual", "Add image details for past work."],
+            ["Business Impact", "Add impact summary or chart", "Add image details for business impact."],
+            ["Hall of Fame", "Add recognition image", "Add image details for recognition."],
+            ["Fast Forward", "Add 2nd half direction", "Add image details for 2nd half direction."],
+            ["Diagram Placeholder", "Add patent/process/portfolio diagram", "Add image details for patent, process or portfolio diagram."]
           ]),
           blocks: []
         }
@@ -260,7 +286,8 @@ export const presentationData = {
           id: "people-business-summary",
           title: "People Group",
           layout: "business-update",
-          businessUpdateVersion: 2,
+          businessUpdateVersion: 3,
+          expandable: true,
           visible: true,
           fullSlide: true,
           text: "People updates focused on development conversations, team participation and workplace flexibility.",
@@ -270,13 +297,19 @@ export const presentationData = {
             "SRIB SSL2026: ARST and CST joined as Research Communication Blasters.",
             "Meal card access expands to Monday-Saturday with no time restriction."
           ],
+          details: [
+            "Competency Assessment and Mid-Year Feedback 2026 are aligned to enable meaningful development conversations.",
+            "Managers can share competency-based developmental feedback alongside mid-year goal progress and convert feedback into IDPs.",
+            "ARST and CST joined forces for SRIB SSL2026 as Research Communication Blasters.",
+            "Meal card access changes from Monday-Friday to Monday-Saturday, with no time restriction."
+          ],
           images: createBusinessImages([
-            ["People Overview", "Development, team connection and flexibility"],
-            ["Competency Assessment", "Timeline and assessment flow"],
-            ["Mid-Year Feedback", "Workday feedback and IDP conversion"],
-            ["Rating Definition", "Level 1 to Level 5 competency scale"],
-            ["SRIB SSL2026", "Research Communication Blasters participation"],
-            ["Meal Card Flexibility", "Monday-Saturday and no time restriction"]
+            ["People Overview", "Development, team connection and flexibility", "Use this slot for People Group overview visuals."],
+            ["Competency Assessment", "Timeline and assessment flow", "Use this slot for Competency Assessment timeline visuals."],
+            ["Mid-Year Feedback", "Workday feedback and IDP conversion", "Use this slot for Workday feedback and IDP conversion visuals."],
+            ["Rating Definition", "Level 1 to Level 5 competency scale", "Use this slot for competency rating definition visuals."],
+            ["SRIB SSL2026", "Research Communication Blasters participation", "Use this slot for SRIB SSL2026 sports/team visuals."],
+            ["Meal Card Flexibility", "Monday-Saturday and no time restriction", "Use this slot for meal card usage window visuals."]
           ]),
           blocks: []
         }
