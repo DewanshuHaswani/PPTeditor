@@ -94,10 +94,12 @@ export function resolveLayout(section = {}) {
   const imageCount = section.images?.filter(Boolean).length || 0;
   const bulletCount = section.bullets?.length || 0;
   const textLength = section.text?.length || 0;
+  const hasTextContent = bulletCount > 0 || textLength > 0;
   if (/hall|fame|recognition/i.test(section.title || "")) return "recognition";
   if (/roadmap|fast forward|timeline/i.test(section.title || "")) return "roadmap";
   if (/metric|achievement/i.test(section.title || "") && bulletCount <= 6) return "metrics";
   if (imageCount > 6) return "masonry";
+  if (imageCount >= 1 && hasTextContent) return "two-column";
   if (imageCount >= 3) return "image-grid";
   if (imageCount === 2) return "two-column";
   if (imageCount === 1) return "hero-image";

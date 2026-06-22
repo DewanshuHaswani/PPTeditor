@@ -17,6 +17,7 @@ import {
   UsersRound
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { BentoGridShowcase } from "@/components/ui/bento-product-features";
 import { BlurredStagger } from "@/components/ui/blurred-stagger-text";
 import FeatureShaderCards from "@/components/ui/feature-shader-cards";
 import { LiquidGlassCard } from "@/components/ui/liquid-weather-glass";
@@ -82,7 +83,89 @@ function textLines(text = "") {
     .filter(Boolean);
 }
 
+function BentoPanel({ children, className = "" }) {
+  return (
+    <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="xs" shadowIntensity="xs" className={`flex h-full min-h-0 min-w-0 flex-col overflow-hidden border border-white/16 bg-white/12 p-5 shadow-glass ${className}`}>
+      {children}
+    </LiquidGlassCard>
+  );
+}
+
+function MixedBentoCard({ item, index, tall = false, wide = false }) {
+  if (item?.kind === "image") {
+    return <ImageTile image={item.image} large={tall || wide} />;
+  }
+
+  if (item?.kind === "metric") {
+    return (
+      <BentoPanel>
+        <div className="mb-5 text-5xl font-black text-white">{item.value || String(index + 1).padStart(2, "0")}</div>
+        <RevealCopy text={item.title} className="text-xl font-black leading-tight text-white" />
+        <RevealCopy text={item.text} className="mt-3 text-base leading-relaxed text-white/76" />
+      </BentoPanel>
+    );
+  }
+
+  return (
+    <BentoPanel>
+      <div className="mb-5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/16 text-cyan-100">
+        {index % 3 === 0 ? <Sparkles /> : index % 3 === 1 ? <Layers3 /> : <CircleDot />}
+      </div>
+      <RevealCopy text={item?.title || `Item ${index + 1}`} className="text-xl font-black leading-tight text-white" />
+      <RevealCopy text={item?.text} className="mt-3 text-base font-semibold leading-relaxed text-white/80" />
+    </BentoPanel>
+  );
+}
+
+function MixedBento({ items }) {
+  const normalized = [...items];
+  while (normalized.length < 6) {
+    normalized.push({
+      kind: "text",
+      title: "Editable Placeholder",
+      text: "Add text or upload an image from the edit portal."
+    });
+  }
+
+  return (
+    <BentoGridShowcase
+      className="max-h-[62vh]"
+      integration={<MixedBentoCard item={normalized[0]} index={0} tall />}
+      trackers={<MixedBentoCard item={normalized[1]} index={1} />}
+      statistic={<MixedBentoCard item={normalized[2]} index={2} />}
+      focus={<MixedBentoCard item={normalized[3]} index={3} />}
+      productivity={<MixedBentoCard item={normalized[4]} index={4} />}
+      shortcuts={<MixedBentoCard item={normalized[5]} index={5} wide />}
+    />
+  );
+}
+
+function sectionToMixedBentoItems(section) {
+  const items = [];
+  const images = (section.images || []).filter(Boolean);
+  const lines = section.bullets?.length ? section.bullets : textLines(section.text);
+
+  images.forEach((image) => {
+    items.push({ kind: "image", image });
+  });
+
+  if (section.text && !section.text.includes("ADD_")) {
+    items.push({ kind: "text", title: section.title || "Overview", text: section.text });
+  }
+
+  lines.forEach((line, index) => {
+    items.push({ kind: "text", title: `Point ${String(index + 1).padStart(2, "0")}`, text: line });
+  });
+
+  return items;
+}
+
 function Bento({ section }) {
+  if (section.images?.some(Boolean)) {
+    const items = sectionToMixedBentoItems(section);
+    if (items.some((item) => item.kind === "image")) return <MixedBento items={items} />;
+  }
+
   const items = section.bullets?.length ? section.bullets : textLines(section.text);
   return (
     <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -198,6 +281,13 @@ function Gallery({ section, variant = "grid" }) {
 }
 
 function TwoColumn({ section }) {
+  const items = sectionToMixedBentoItems(section);
+  const hasImage = items.some((item) => item.kind === "image");
+  const hasText = items.some((item) => item.kind !== "image");
+  if (hasImage && hasText) {
+    return <MixedBento items={items} />;
+  }
+
   return (
     <div className="grid w-full grid-cols-1 gap-5 xl:grid-cols-2">
       <Rise>
@@ -361,6 +451,34 @@ function BlockObject({ block, index }) {
 
 function ObjectLayout({ section }) {
   const blocks = (section.blocks || []).filter((block) => block.visible !== false);
+  const imageBlocks = blocks.filter((block) => block.type === "image");
+  const contentBlocks = blocks.filter((block) => block.type !== "image");
+
+  if (imageBlocks.length && contentBlocks.length && (section.layout === "auto" || section.layout === "bento" || section.layout === "two-column" || section.layout === "diagram-gallery" || section.layout === "timeline-gallery")) {
+    const items = blocks.map((block, index) => {
+      if (block.type === "image") {
+        return {
+          kind: "image",
+          image: block.image || { caption: block.caption || block.title }
+        };
+      }
+      if (block.type === "metric") {
+        return {
+          kind: "metric",
+          value: block.metricValue || String(index + 1).padStart(2, "0"),
+          title: block.title,
+          text: block.text
+        };
+      }
+      return {
+        kind: "text",
+        title: block.title || block.caption || `Object ${index + 1}`,
+        text: block.text || (block.bullets || []).join("\n")
+      };
+    });
+    return <MixedBento items={items} />;
+  }
+
   return (
     <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {blocks.map((block, index) => (
