@@ -459,6 +459,15 @@ export const presentationData = {
       sections: []
     },
     {
+      id: "why-collaboration-matters",
+      type: "quote",
+      title: "Why Collaboration Matters",
+      subtitle: "",
+      body: "Collaboration helps teams combine diverse strengths, build trust, solve complex problems faster, and create outcomes that are stronger than what any one person could achieve alone.",
+      theme: "teal",
+      sections: []
+    },
+    {
       id: "thank-you",
       type: "thanks",
       title: "Thank You",

@@ -9,6 +9,7 @@ function migratePeopleGroupContent(data) {
   const defaults = cloneData(presentationData);
   const defaultPeople = defaults.slides.find((slide) => slide.id === "people-group");
   const defaultOpenInnovation = defaults.slides.find((slide) => slide.id === "open-innovation");
+  const defaultCollaborationThought = defaults.slides.find((slide) => slide.id === "why-collaboration-matters");
   const openInnovation = copy.slides?.find((slide) => slide.id === "open-innovation");
   const peopleGroup = copy.slides?.find((slide) => slide.id === "people-group");
 
@@ -22,6 +23,12 @@ function migratePeopleGroupContent(data) {
 
   if (peopleGroup && defaultPeople && !peopleGroup.sections?.some((section) => section.id === "people-competency-feedback")) {
     peopleGroup.sections = cloneData(defaultPeople.sections);
+  }
+
+  if (copy.slides && defaultCollaborationThought && !copy.slides.some((slide) => slide.id === "why-collaboration-matters")) {
+    const thankYouIndex = copy.slides.findIndex((slide) => slide.id === "thank-you");
+    const insertIndex = thankYouIndex >= 0 ? thankYouIndex : copy.slides.length;
+    copy.slides.splice(insertIndex, 0, cloneData(defaultCollaborationThought));
   }
 
   return copy;
