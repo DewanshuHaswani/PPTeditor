@@ -130,7 +130,7 @@ function ImageTile({ image, large = false }) {
   );
 }
 
-function BusinessImageCard({ image, index, onExpand, expandable = true, compact = false }) {
+function BusinessImageCard({ image, index, onExpand, expandable = true, compact = false, fill = false }) {
   return (
     <Rise index={index}>
       <motion.figure
@@ -138,9 +138,9 @@ function BusinessImageCard({ image, index, onExpand, expandable = true, compact 
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={riseTransition}
         onClick={() => expandable && onExpand?.({ type: "image", image, title: image?.title || image?.caption, subtitle: image?.subtitle, details: image?.details })}
-        className={`min-w-0 overflow-hidden rounded-[24px] border border-white/14 bg-white/10 shadow-glass ${expandable ? "cursor-pointer transition hover:border-white/28 hover:bg-white/14" : ""}`}
+        className={`min-w-0 overflow-hidden rounded-[24px] border border-white/14 bg-white/10 shadow-glass ${fill ? "flex h-full flex-col" : ""} ${expandable ? "cursor-pointer transition hover:border-white/28 hover:bg-white/14" : ""}`}
       >
-        <div className={`flex ${compact ? "aspect-[5/3]" : "aspect-[16/9]"} items-center justify-center bg-white/[0.07]`}>
+        <div className={`flex ${fill ? "min-h-0 flex-1" : compact ? "aspect-[5/3]" : "aspect-[16/9]"} items-center justify-center bg-white/[0.07]`}>
           {image?.src ? (
             <img src={image.src} alt={image.title || image.caption || "Business update image"} className="h-full w-full" style={imageStyle(image)} loading="lazy" />
           ) : (
@@ -308,14 +308,24 @@ function Bento({ section }) {
 function BusinessUpdate({ section }) {
   const [expandedItem, setExpandedItem] = useState(null);
   const images = [...(section.images || [])];
-  while (images.length < 6) {
-    images.push({ id: `placeholder-${images.length}`, title: `Image ${images.length + 1}`, subtitle: "Add image title and subtitle in the edit portal", details: "Upload an image and add further information from the edit portal.", caption: `Image ${images.length + 1}`, expandable: true });
-  }
   const bullets = section.bullets?.length ? section.bullets : textLines(section.text);
   const details = section.details || [];
   const canExpand = section.expandable !== false;
   const compactImages = images.length > 6;
-  const imageGridClass = images.length > 8 ? "grid-cols-3 xl:grid-cols-4" : images.length > 4 ? "grid-cols-2 xl:grid-cols-3" : "grid-cols-2";
+  const fillImages = images.length > 0 && images.length <= 4;
+  const imageGridClass =
+    images.length === 1
+      ? "grid-cols-1"
+      : images.length === 2
+        ? "grid-cols-2"
+        : images.length === 3
+          ? "grid-cols-3"
+          : images.length === 4
+            ? "grid-cols-2"
+            : images.length > 8
+              ? "grid-cols-3 xl:grid-cols-4"
+              : "grid-cols-2 xl:grid-cols-3";
+  const imageAreaClass = images.length > 6 ? "max-h-[68vh] overflow-y-auto" : "h-full min-h-[52vh] max-h-[68vh] overflow-hidden";
 
   return (
     <>
@@ -338,10 +348,16 @@ function BusinessUpdate({ section }) {
             </div>
           </LiquidGlassCard>
         </Rise>
-        <div className={`grid max-h-[68vh] min-w-0 ${imageGridClass} gap-3 overflow-y-auto pr-1`}>
-          {images.map((image, index) => (
-            <BusinessImageCard key={image.id || index} image={image} index={index} compact={compactImages} expandable={canExpand && image.expandable !== false} onExpand={setExpandedItem} />
-          ))}
+        <div className={`grid min-w-0 ${imageAreaClass} ${imageGridClass} gap-3 pr-1`}>
+          {images.length ? (
+            images.map((image, index) => (
+              <BusinessImageCard key={image.id || index} image={image} index={index} fill={fillImages} compact={compactImages} expandable={canExpand && image.expandable !== false} onExpand={setExpandedItem} />
+            ))
+          ) : (
+            <div className="col-span-full flex min-h-[52vh] items-center justify-center rounded-[28px] border border-dashed border-white/18 bg-white/[0.06] p-8 text-center text-sm font-black uppercase tracking-[0.18em] text-white/48">
+              No images selected
+            </div>
+          )}
         </div>
       </div>
       {expandedItem ? <BusinessDetailOverlay item={expandedItem} onClose={() => setExpandedItem(null)} /> : null}
