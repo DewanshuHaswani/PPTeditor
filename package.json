@@ -13,6 +13,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@gsap/react": "^2.1.2",
+    "@paper-design/shaders-react": "^0.0.76",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.17.10",
     "@vitejs/plugin-react": "^4.3.4",

@@ -3,16 +3,22 @@ import {
   CalendarClock,
   Check,
   ChevronRight,
+  Clock3,
   CircleDot,
+  Clapperboard,
+  FileQuestion,
   Image as ImageIcon,
   Layers3,
+  Mic2,
   MessageCircle,
+  Pencil,
   Sparkles,
   Trophy,
   UsersRound
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { BlurredStagger } from "@/components/ui/blurred-stagger-text";
+import FeatureShaderCards from "@/components/ui/feature-shader-cards";
 import { LiquidGlassCard } from "@/components/ui/liquid-weather-glass";
 import { resolveLayout } from "../utils/layout";
 
@@ -95,6 +101,27 @@ function Bento({ section }) {
 }
 
 function Steps({ section }) {
+  const iconClassName = "h-7 w-7";
+  const icons = [
+    <MessageCircle className={iconClassName} />,
+    <UsersRound className={iconClassName} />,
+    <Mic2 className={iconClassName} />,
+    <FileQuestion className={iconClassName} />,
+    <Clapperboard className={iconClassName} />,
+    <Pencil className={iconClassName} />,
+    <Clock3 className={iconClassName} />,
+    <Sparkles className={iconClassName} />
+  ];
+  const features = (section.bullets || []).map((step, index) => ({
+    title: `Step ${String(index + 1).padStart(2, "0")}`,
+    description: step,
+    icon: icons[index % icons.length]
+  }));
+
+  if (features.length) {
+    return <FeatureShaderCards features={features} />;
+  }
+
   return (
     <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-3">
       {section.bullets?.map((step, index) => (
