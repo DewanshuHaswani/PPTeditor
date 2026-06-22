@@ -49,7 +49,6 @@ export function MovieModeOverlay({ onClose, onSelectGroup, groupTargets = {} }) 
 
   const handleSelectGroup = (groupId) => {
     onSelectGroup(groupId);
-    onClose();
   };
 
   useEffect(() => {
@@ -69,12 +68,20 @@ export function MovieModeOverlay({ onClose, onSelectGroup, groupTargets = {} }) 
           handleSelectGroup(card.id);
         }}
       />
-      <div className="sr-only" aria-label="Movie Mode quick navigation">
+      <div className="absolute inset-x-0 bottom-6 z-[60] flex justify-center px-5" aria-label="Movie Mode quick navigation">
+        <div className="flex max-w-6xl flex-wrap justify-center gap-2 rounded-[28px] border border-white/12 bg-black/48 p-2 shadow-glass backdrop-blur-2xl">
         {cards.map((card) => (
-          <button key={card.id} type="button" data-movie-target={card.id} onClick={() => handleSelectGroup(card.id)}>
-            Enter {card.title}
+          <button
+            key={card.id}
+            type="button"
+            data-movie-target={card.id}
+            onClick={() => handleSelectGroup(card.id)}
+            className="rounded-full border border-white/12 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-white/82 transition hover:bg-white/18"
+          >
+            {card.slideNumber ? `Slide ${card.slideNumber}` : "Slide"} - {card.title}
           </button>
         ))}
+        </div>
       </div>
       <div className="absolute right-5 top-5 z-[60]">
         <GlassButton onClick={onClose}>

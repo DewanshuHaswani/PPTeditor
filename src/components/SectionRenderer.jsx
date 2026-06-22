@@ -130,7 +130,7 @@ function ImageTile({ image, large = false }) {
   );
 }
 
-function BusinessImageCard({ image, index, onExpand, expandable = true }) {
+function BusinessImageCard({ image, index, onExpand, expandable = true, compact = false }) {
   return (
     <Rise index={index}>
       <motion.figure
@@ -140,7 +140,7 @@ function BusinessImageCard({ image, index, onExpand, expandable = true }) {
         onClick={() => expandable && onExpand?.({ type: "image", image, title: image?.title || image?.caption, subtitle: image?.subtitle, details: image?.details })}
         className={`min-w-0 overflow-hidden rounded-[24px] border border-white/14 bg-white/10 shadow-glass ${expandable ? "cursor-pointer transition hover:border-white/28 hover:bg-white/14" : ""}`}
       >
-        <div className="flex aspect-[16/9] items-center justify-center bg-white/[0.07]">
+        <div className={`flex ${compact ? "aspect-[5/3]" : "aspect-[16/9]"} items-center justify-center bg-white/[0.07]`}>
           {image?.src ? (
             <img src={image.src} alt={image.title || image.caption || "Business update image"} className="h-full w-full" style={imageStyle(image)} loading="lazy" />
           ) : (
@@ -165,25 +165,33 @@ function BusinessDetailOverlay({ item, onClose }) {
   if (!item) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/72 p-6 backdrop-blur-xl" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-6 backdrop-blur-2xl" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, y: 18, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 12, scale: 0.98 }}
         transition={riseTransition}
         onClick={(event) => event.stopPropagation()}
-        className="max-h-[86vh] w-full max-w-5xl overflow-hidden rounded-[34px] border border-white/18 bg-slate-950/88 shadow-glow"
+        className="max-h-[86vh] w-full max-w-6xl overflow-hidden rounded-[34px] border border-white/20 bg-[#07111f] shadow-glow"
       >
-        {item.type === "image" && item.image?.src ? (
-          <div className="max-h-[58vh] bg-black/30">
-            <img src={item.image.src} alt={item.title || "Expanded image"} className="max-h-[58vh] w-full object-contain" />
+        <div className={item.type === "image" ? "grid max-h-[86vh] lg:grid-cols-[0.82fr_1.18fr]" : "max-h-[86vh]"}>
+          <div className="min-w-0 p-7 lg:p-8">
+            {item.kicker ? <div className="mb-3 text-xs font-black uppercase tracking-[0.24em] text-cyan-100/70">{item.kicker}</div> : null}
+            <h3 className="text-3xl font-black leading-tight text-white lg:text-4xl">{item.title || "Details"}</h3>
+            {item.subtitle ? <p className="mt-3 text-lg font-semibold text-white/72">{item.subtitle}</p> : null}
+            {item.details ? <p className="mt-6 max-h-[48vh] overflow-y-auto rounded-[24px] border border-white/10 bg-white/[0.08] p-5 whitespace-pre-wrap text-lg leading-relaxed text-white/90">{item.details}</p> : null}
           </div>
-        ) : null}
-        <div className="p-7">
-          {item.kicker ? <div className="mb-3 text-xs font-black uppercase tracking-[0.24em] text-cyan-100/60">{item.kicker}</div> : null}
-          <h3 className="text-3xl font-black leading-tight text-white">{item.title || "Details"}</h3>
-          {item.subtitle ? <p className="mt-2 text-lg font-semibold text-white/62">{item.subtitle}</p> : null}
-          {item.details ? <p className="mt-5 whitespace-pre-wrap text-lg leading-relaxed text-white/82">{item.details}</p> : null}
+          {item.type === "image" ? (
+            <div className="flex min-h-[340px] items-center justify-center border-t border-white/10 bg-black/35 p-5 lg:border-l lg:border-t-0">
+              {item.image?.src ? (
+                <img src={item.image.src} alt={item.title || "Expanded image"} className="max-h-[74vh] w-full rounded-[24px] object-contain" />
+              ) : (
+                <div className="flex h-full min-h-[320px] w-full items-center justify-center rounded-[24px] border border-dashed border-white/20 bg-white/[0.06] text-sm font-black uppercase tracking-[0.18em] text-white/48">
+                  Image Placeholder
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
       </motion.div>
     </div>
@@ -306,6 +314,8 @@ function BusinessUpdate({ section }) {
   const bullets = section.bullets?.length ? section.bullets : textLines(section.text);
   const details = section.details || [];
   const canExpand = section.expandable !== false;
+  const compactImages = images.length > 6;
+  const imageGridClass = images.length > 8 ? "grid-cols-3 xl:grid-cols-4" : images.length > 4 ? "grid-cols-2 xl:grid-cols-3" : "grid-cols-2";
 
   return (
     <>
@@ -328,9 +338,9 @@ function BusinessUpdate({ section }) {
             </div>
           </LiquidGlassCard>
         </Rise>
-        <div className="grid max-h-[68vh] min-w-0 grid-cols-2 gap-3 overflow-y-auto pr-1 xl:grid-cols-3">
+        <div className={`grid max-h-[68vh] min-w-0 ${imageGridClass} gap-3 overflow-y-auto pr-1`}>
           {images.map((image, index) => (
-            <BusinessImageCard key={image.id || index} image={image} index={index} expandable={canExpand && image.expandable !== false} onExpand={setExpandedItem} />
+            <BusinessImageCard key={image.id || index} image={image} index={index} compact={compactImages} expandable={canExpand && image.expandable !== false} onExpand={setExpandedItem} />
           ))}
         </div>
       </div>

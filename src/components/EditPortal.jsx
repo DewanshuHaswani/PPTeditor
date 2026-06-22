@@ -1,5 +1,5 @@
 import { Copy, Download, Eye, FileInput, ImagePlus, LayoutGrid, List, Plus, Quote, Save, Text, Trash2, Upload } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createContentBlock, createImagePlaceholder, createSection, createSlide, presentationData } from "../data/presentationData";
 import { blockSizeOptions, blockTypeOptions, fileToDataUrl, flattenSlides, imageFitOptions, imagePositionOptions, layoutOptions, legacySectionBlocks, textSizeOptions } from "../utils/layout";
 import { GlassButton } from "./GlassButton";
@@ -57,11 +57,16 @@ function objectIcon(type) {
 export function EditPortal({ data, actions }) {
   const [selectedSlideId, setSelectedSlideId] = useState(data.slides[0]?.id);
   const [selectedSectionId, setSelectedSectionId] = useState(data.slides[0]?.sections?.[0]?.id);
+  const [imageCountDraft, setImageCountDraft] = useState("");
   const importRef = useRef(null);
   const selectedSlideIndex = Math.max(0, data.slides.findIndex((slide) => slide.id === selectedSlideId));
   const selectedSlide = data.slides[selectedSlideIndex] || data.slides[0];
   const selectedSectionIndex = selectedSlide?.sections?.findIndex((section) => section.id === selectedSectionId) ?? -1;
   const selectedSection = selectedSlide?.sections?.[selectedSectionIndex] || selectedSlide?.sections?.[0];
+
+  useEffect(() => {
+    setImageCountDraft(String(selectedSection?.images?.length || 0));
+  }, [selectedSection?.id, selectedSection?.images?.length]);
 
   const previewSlide = useMemo(() => {
     if (!selectedSlide) return flattenSlides(data)[0];
@@ -163,6 +168,19 @@ export function EditPortal({ data, actions }) {
       };
       if (imageIndex === null) images.push(item);
       else images[imageIndex] = item;
+      return { ...section, images };
+    });
+  };
+
+  const applyImageCount = () => {
+    const targetCount = Math.max(0, Math.min(24, Number.parseInt(imageCountDraft, 10) || 0));
+    setSection((section) => {
+      const images = [...(section.images || [])];
+      if (images.length > targetCount) return { ...section, images: images.slice(0, targetCount) };
+      while (images.length < targetCount) {
+        const nextIndex = images.length + 1;
+        images.push(createImagePlaceholder(`Image ${nextIndex}`, "Add image subtitle"));
+      }
       return { ...section, images };
     });
   };
@@ -593,7 +611,21 @@ export function EditPortal({ data, actions }) {
                     <div className="text-xs font-black uppercase tracking-[0.18em] text-indigo-500">Image Management</div>
                     <h2 className="text-2xl font-black">Assets</h2>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700">
+                      How many images?
+                      <input
+                        type="number"
+                        min="0"
+                        max="24"
+                        value={imageCountDraft}
+                        onChange={(event) => setImageCountDraft(event.target.value)}
+                        className="h-8 w-16 rounded-full border border-slate-200 px-3 text-center text-sm font-black outline-none focus:border-indigo-300"
+                      />
+                    </label>
+                    <button onClick={applyImageCount} className="rounded-full border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-black text-indigo-700">
+                      Apply Count
+                    </button>
                     <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white">
                       <Upload className="h-4 w-4" /> Upload
                       <input type="file" accept="image/*" hidden onChange={(event) => event.target.files?.[0] && handleImageUpload(event.target.files[0])} />

@@ -27,7 +27,10 @@ export function PresentationMode({ data }) {
   const previous = () => setIndex((value) => Math.max(value - 1, 0));
   const jumpToGroup = (groupId) => {
     const targetIndex = slides.findIndex((slide) => slide.originalSlideId === groupId || slide.id === groupId || slide.id.startsWith(`${groupId}__`));
-    if (targetIndex >= 0) setIndex(targetIndex);
+    if (targetIndex >= 0) {
+      setIndex(targetIndex);
+      setMovieModeOpen(false);
+    }
   };
 
   useEffect(() => {

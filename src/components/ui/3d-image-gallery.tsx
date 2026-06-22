@@ -265,6 +265,7 @@ function CardModal() {
             <div className="flex gap-2">
               <button
                 type="button"
+                onPointerDown={(event) => event.stopPropagation()}
                 onClick={(event) => {
                   event.stopPropagation();
                   handleSelect();
@@ -279,6 +280,7 @@ function CardModal() {
               </button>
               <button
                 type="button"
+                onPointerDown={(event) => event.stopPropagation()}
                 onClick={toggleFavorite}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-black outline-none transition duration-300 ease-out hover:opacity-80 active:scale-[0.97]"
                 style={{ backgroundColor: "#31b8c6" }}
