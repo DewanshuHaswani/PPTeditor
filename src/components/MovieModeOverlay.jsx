@@ -42,33 +42,42 @@ const groupCards = [
   }
 ];
 
-export function MovieModeOverlay({ onClose, onSelectGroup, groupTargets = {} }) {
-  const cards = groupCards.map((card) => ({
-    ...card,
-    slideNumber: groupTargets[card.id]
-  }));
+export function MovieModeOverlay({ onClose, onSelectGroup, groupTargets = {}, groups = [] }) {
+  const cards = groups.filter((group) => groupTargets[group.id]).map((group) => {
+    const preset = groupCards.find((card) => card.id === group.id);
+    return {
+      ...preset, id: group.id, title: group.groupName || group.title || preset?.title || "Group",
+      subtitle: group.subtitle || preset?.subtitle || "Open this group's presentation",
+      alt: group.groupName || group.title || "Group",
+      imageUrl: assetUrl(group.sections?.find((section) => section.visible !== false)?.images?.find((image) => image.src)?.src || preset?.imageUrl || groupCards[0].imageUrl),
+      slideNumber: groupTargets[group.id]
+    };
+  });
 
   const handleSelectGroup = (groupId) => {
     onSelectGroup(groupId);
   };
 
   useEffect(() => {
+    const onKey = (event) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
     window.__ahmMovieModeSelectGroup = handleSelectGroup;
     return () => {
+      window.removeEventListener("keydown", onKey);
       delete window.__ahmMovieModeSelectGroup;
     };
   });
 
   return (
-    <div className="fixed inset-0 z-50 bg-black">
-      <StellarCardGallerySingle
+    <div role="dialog" aria-modal="true" aria-label="Movie Mode" className="fixed inset-0 z-50 bg-black">
+      {cards.length ? <StellarCardGallerySingle
         title="Movie Mode"
         subtitle="Drag to explore - Scroll to zoom - Click a group card, then press Enter Section"
         cards={cards}
         onSelect={(card) => {
           handleSelectGroup(card.id);
         }}
-      />
+      /> : <div className="p-8 text-white"><h2 className="text-2xl font-bold">Movie Mode</h2><p className="mt-4">No visible business groups. Add a group slide or enable its sections in the editor.</p></div>}
       <div className="absolute inset-x-0 bottom-6 z-[60] flex justify-center px-5" aria-label="Movie Mode quick navigation">
         <div className="flex max-w-6xl flex-wrap justify-center gap-2 rounded-[28px] border border-white/12 bg-black/48 p-2 shadow-glass backdrop-blur-2xl">
         {cards.map((card) => (

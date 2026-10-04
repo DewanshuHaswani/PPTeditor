@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, rename, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { validatePresentation } from '../src/utils/presentationFile.js';
 
@@ -21,19 +21,24 @@ export function localPresentationPlugin(root) {
       if (req.method === 'GET') {
         await writes;
         let data = null;
-        try { data = validatePresentation(JSON.parse(await readFile(filename, 'utf8'))); }
+        let savedAt = 0;
+        try { data = validatePresentation(JSON.parse(await readFile(filename, 'utf8'))); savedAt = (await stat(filename)).mtimeMs; }
         catch (error) { if (error.code !== 'ENOENT') throw error; }
-        return reply(200, { data, path: '.local/presentation.json' });
+        return reply(200, { data, savedAt, path: '.local/presentation.json' });
       }
       if (req.method !== 'PUT') return reply(405, { message: 'Method not allowed.' });
       if (!req.headers['content-type']?.startsWith('application/json')) return reply(415, { message: 'Expected JSON.' });
       req.setEncoding('utf8');
       let body = '';
+      let bodyBytes = 0;
       for await (const chunk of req) {
         body += chunk.toString();
-        if (Buffer.byteLength(body) > 100 * 1024 * 1024) return reply(413, { message: 'Presentation exceeds the 100 MB save limit.' });
+        bodyBytes += Buffer.byteLength(chunk);
+        if (bodyBytes > 100 * 1024 * 1024) return reply(413, { message: 'Presentation exceeds the 100 MB save limit.' });
       }
-      const data = validatePresentation(JSON.parse(body));
+      let data;
+      try { data = validatePresentation(JSON.parse(body)); }
+      catch (error) { return reply(400, { message: error.message }); }
       const operation = writes.catch(() => {}).then(async () => {
         await mkdir(directory, { recursive: true });
         await writeFile(`${filename}.tmp`, JSON.stringify(data, null, 2), 'utf8');
@@ -41,7 +46,7 @@ export function localPresentationPlugin(root) {
       });
       writes = operation.catch(() => {});
       await operation;
-      return reply(200, { path: '.local/presentation.json' });
+      return reply(200, { savedAt: (await stat(filename)).mtimeMs, path: '.local/presentation.json' });
     } catch (error) { return reply(500, { message: error.message || 'Unable to save presentation on disk.' }); }
   };
   return {

@@ -7,7 +7,7 @@ async function embedRemoteImages(data) {
   async function visit(value) {
     if (!value || typeof value !== 'object') return;
     for (const [key, item] of Object.entries(value)) {
-      if (['src', 'heroImage'].includes(key) && typeof item === 'string' && item && !item.startsWith('data:') && !item.startsWith('/assets/')) {
+      if (['src', 'heroImage'].includes(key) && typeof item === 'string' && item && !item.startsWith('data:')) {
         if (!cache.has(item)) cache.set(item, (async () => {
           const response = await fetch(item);
           if (!response.ok) throw new Error('An image could not be included. Upload it from your computer and retry.');
@@ -38,7 +38,7 @@ export async function exportPortable(data) {
   const html = template.replace('__PRESENTATION_DATA__', () => json);
   const files = {
     'Open Presentation.html': strToU8(html),
-    'presentation.json': strToU8(JSON.stringify(data, null, 2)),
+    'presentation.json': strToU8(JSON.stringify(packaged, null, 2)),
     'READ ME.txt': strToU8('Extract this ZIP first. Double-click Open Presentation.html to open the complete live presentation in Chrome, Edge, Firefox or Safari. No server or internet connection is needed for slides, images, timer, story and movie views. Quiz links need internet. Use arrow keys or Space to navigate, Home/End to jump, and F for fullscreen. Use Notes for speaker notes and the session clock. Import presentation.json into the editor to continue editing. Attach the ZIP to your email; large files may need a file-sharing link. This is a web presentation, not a PowerPoint .pptx file.\n')
   };
   const bytes = await new Promise((resolve, reject) => zip(files, { level: 6 }, (error, result) => error ? reject(error) : resolve(result)));

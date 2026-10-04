@@ -1,3 +1,4 @@
+import { sectionWithBlocks } from "../utils/content";
 import {
   Award,
   CalendarClock,
@@ -142,7 +143,7 @@ function BusinessImageCard({ image, index, onExpand, expandable = true, compact 
       >
         <div className={`flex ${fill ? "min-h-0 flex-1" : compact ? "aspect-[5/3]" : "aspect-[16/9]"} items-center justify-center bg-white/[0.07]`}>
           {image?.src ? (
-            <img src={image.src} alt={image.title || image.caption || "Business update image"} className="h-full w-full" style={{ ...imageStyle(image), objectFit: "contain" }} loading="lazy" />
+            <img src={image.src} alt={image.title || image.caption || "Business update image"} className="h-full w-full" style={imageStyle(image)} loading="lazy" />
           ) : (
             <div className="h-full w-full border border-dashed border-white/20 bg-[linear-gradient(135deg,rgba(255,255,255,0.14),rgba(255,255,255,0.03))]" />
           )}
@@ -240,32 +241,29 @@ function MixedBentoCard({ item, index, tall = false, wide = false }) {
 }
 
 function MixedBento({ items }) {
-  const normalized = [...items];
-  while (normalized.length < 6) {
-    normalized.push({
-      kind: "text",
-      title: "Editable Placeholder",
-      text: "Add text or upload an image from the edit portal."
-    });
-  }
-
+  if (items.length !== 6) return (
+    <div className="grid max-h-[62vh] w-full grid-cols-1 gap-4 overflow-y-auto md:grid-cols-2 xl:grid-cols-3">
+      {items.map((item, index) => <MixedBentoCard key={index} item={item} index={index} />)}
+    </div>
+  );
   return (
-    <BentoGridShowcase
-      className="max-h-[62vh]"
-      integration={<MixedBentoCard item={normalized[0]} index={0} tall />}
-      trackers={<MixedBentoCard item={normalized[1]} index={1} />}
-      statistic={<MixedBentoCard item={normalized[2]} index={2} />}
-      focus={<MixedBentoCard item={normalized[3]} index={3} />}
-      productivity={<MixedBentoCard item={normalized[4]} index={4} />}
-      shortcuts={<MixedBentoCard item={normalized[5]} index={5} wide />}
-    />
+    <div className="max-h-[62vh] overflow-y-auto">
+      <BentoGridShowcase
+        integration={<MixedBentoCard item={items[0]} index={0} tall />}
+        trackers={<MixedBentoCard item={items[1]} index={1} />}
+        statistic={<MixedBentoCard item={items[2]} index={2} />}
+        focus={<MixedBentoCard item={items[3]} index={3} />}
+        productivity={<MixedBentoCard item={items[4]} index={4} />}
+        shortcuts={<MixedBentoCard item={items[5]} index={5} wide />}
+      />
+    </div>
   );
 }
 
 function sectionToMixedBentoItems(section) {
   const items = [];
   const images = (section.images || []).filter(Boolean);
-  const lines = section.bullets?.length ? section.bullets : textLines(section.text);
+  const lines = (section.bullets || []).filter((line) => line.trim());
 
   images.forEach((image) => {
     items.push({ kind: "image", image });
@@ -308,8 +306,9 @@ function Bento({ section }) {
 function BusinessUpdate({ section }) {
   const [expandedItem, setExpandedItem] = useState(null);
   const images = [...(section.images || [])];
-  const bullets = section.bullets?.length ? section.bullets : textLines(section.text);
+  const bullets = section.bullets || [];
   const details = section.details || [];
+  const entries = bullets.map((bullet, index) => ({ bullet, detail: details[index] })).filter(({ bullet }) => bullet.trim());
   const canExpand = section.expandable !== false;
   const compactImages = images.length > 6;
   const fillImages = images.length > 0 && images.length <= 4;
@@ -334,11 +333,11 @@ function BusinessUpdate({ section }) {
           <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="xs" shadowIntensity="xs" className="flex h-full min-w-0 flex-col overflow-hidden border border-white/16 bg-white/12 p-5 shadow-glass">
             {section.text && !section.text.includes("ADD_") ? <FastCopy text={section.text} className="text-lg font-black leading-snug text-white/92 xl:text-xl" /> : null}
             <div className="mt-4 grid gap-3">
-              {bullets.map((bullet, index) => (
+              {entries.map(({ bullet, detail }, index) => (
                 <button
                   type="button"
                   key={bullet + index}
-                  onClick={() => canExpand && setExpandedItem({ type: "text", kicker: `Update ${String(index + 1).padStart(2, "0")}`, title: bullet, details: details[index] || bullet })}
+                  onClick={() => canExpand && setExpandedItem({ type: "text", kicker: `Update ${String(index + 1).padStart(2, "0")}`, title: bullet, details: detail || bullet })}
                   className={`min-w-0 rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 text-left ${canExpand ? "cursor-pointer transition hover:border-white/24 hover:bg-white/12" : ""}`}
                 >
                   <div className="mb-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-100/55">{String(index + 1).padStart(2, "0")}</div>
@@ -421,7 +420,7 @@ function Steps({ section, preview = false }) {
 }
 
 function TextCards({ section }) {
-  const lines = section.bullets?.length ? section.bullets : textLines(section.text);
+  const lines = (section.bullets || []).filter((line) => line.trim());
   return (
     <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-2">
       {section.text && !section.text.includes("ADD_") ? (
@@ -455,7 +454,7 @@ function TextHeavy({ section }) {
           <Rise key={bullet + index} index={index + 1}>
             <details open={index < 3} className="min-w-0 overflow-hidden rounded-[22px] border border-white/14 bg-white/10 p-4 text-white shadow-glass backdrop-blur-xl">
             <summary className="cursor-pointer text-lg font-bold"><RevealCopy text={bullet} className="inline text-lg font-bold" /></summary>
-            <p className="mt-3 text-sm leading-relaxed text-white/72">Editable detail area. Add exact source text in the edit portal.</p>
+            <p className="mt-3 text-sm leading-relaxed text-white/72">{section.details?.[index] || ""}</p>
           </details>
           </Rise>
         ))}
@@ -692,8 +691,8 @@ function ObjectLayout({ section }) {
 
 export function SectionRenderer({ section, preview = false }) {
   const layout = resolveLayout(section);
-  if (layout === "business-update") return <BusinessUpdate section={section} />;
-  if (section.objectsEdited || section.blocks?.some((block) => block.visible !== false)) return <ObjectLayout section={section} />;
+  if (layout === "business-update") return <BusinessUpdate section={section.objectsEdited || section.blocks?.length ? sectionWithBlocks(section, section.blocks || []) : section} />;
+  if (section.objectsEdited || section.blocks?.length) return <ObjectLayout section={section} />;
   if (layout === "steps") return <Steps section={section} preview={preview} />;
   if (layout === "bento") return <Bento section={section} />;
   if (layout === "text-heavy") return <TextHeavy section={section} />;

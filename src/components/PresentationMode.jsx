@@ -17,18 +17,13 @@ export function PresentationMode({ data }) {
   const [fullscreenError, setFullscreenError] = useState("");
   const [movieModeOpen, setMovieModeOpen] = useState(false);
   const current = slides[Math.min(index, slides.length - 1)] || slides[0];
-  const movieGroupTargets = useMemo(
-    () =>
-      Object.fromEntries(
-        ["advance-research-group", "open-innovation", "standards-research-group", "ip-group", "people-group"].map((groupId) => {
-          const targetIndex = slides.findIndex((slide) => slide.originalSlideId === groupId || slide.id === groupId || slide.id.startsWith(`${groupId}__`));
-          return [groupId, targetIndex >= 0 ? targetIndex + 1 : null];
-        })
-      ),
-    [slides]
-  );
+  const groups = useMemo(() => data.slides.filter((slide) => slide.type === "group"), [data]);
+  const movieGroupTargets = useMemo(() => Object.fromEntries(groups.map((group) => {
+    const targetIndex = slides.findIndex((slide) => slide.originalSlideId === group.id);
+    return [group.id, targetIndex >= 0 ? targetIndex + 1 : null];
+  })), [groups, slides]);
 
-  const next = () => setIndex((value) => Math.min(value + 1, slides.length - 1));
+  const next = () => setIndex((value) => Math.max(0, Math.min(value + 1, slides.length - 1)));
   const previous = () => setIndex((value) => Math.max(value - 1, 0));
   const jumpToGroup = (groupId) => {
     const targetIndex = slides.findIndex((slide) => slide.originalSlideId === groupId || slide.id === groupId || slide.id.startsWith(`${groupId}__`));
@@ -49,12 +44,13 @@ export function PresentationMode({ data }) {
   useEffect(() => {
     const onKey = (event) => {
       if (event.key === "Escape") { setBlank(false); setNotesOpen(false); return; }
-      if (event.target.closest?.("input, textarea, select, button, a, [contenteditable], [role=dialog]") || event.ctrlKey || event.metaKey || event.altKey) return;
+      if (event.target.closest?.("input, textarea, select, [contenteditable], [role=dialog]") || event.ctrlKey || event.metaKey || event.altKey) return;
+      if (event.key === " " && event.target.closest?.("button, a")) return;
       if (movieModeOpen || notesOpen || document.querySelector('[role="dialog"]')) return;
       if (["ArrowRight", " ", "PageDown"].includes(event.key)) { event.preventDefault(); next(); }
       if (["ArrowLeft", "PageUp"].includes(event.key)) { event.preventDefault(); previous(); }
       if (event.key === "Home") { event.preventDefault(); setIndex(0); }
-      if (event.key === "End") { event.preventDefault(); setIndex(slides.length - 1); }
+      if (event.key === "End") { event.preventDefault(); setIndex(Math.max(0, slides.length - 1)); }
       if (event.key.toLowerCase() === "f") fullscreen();
       if (event.key.toLowerCase() === "n") setNotesOpen(true);
       if (event.key.toLowerCase() === "b") setBlank((value) => !value);
@@ -63,7 +59,7 @@ export function PresentationMode({ data }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [slides.length, movieModeOpen, notesOpen]);
 
-  const progress = ((index + 1) / Math.max(slides.length, 1)) * 100;
+  const progress = slides.length ? ((Math.min(index, slides.length - 1) + 1) / slides.length) * 100 : 0;
 
   return (
     <main className="relative min-h-screen bg-slate-950 text-white">
@@ -97,7 +93,7 @@ export function PresentationMode({ data }) {
           <GlassButton onClick={() => setMovieModeOpen(true)}>
             <Film className="h-4 w-4" /> Movie
           </GlassButton>
-          <select aria-label="Jump to slide" value={Math.min(index, Math.max(0, slides.length - 1))} onChange={(event) => setIndex(Number(event.target.value))} className="max-w-44 rounded-xl bg-slate-900 px-2 py-2 text-sm text-white">
+          <select disabled={!slides.length} aria-label="Jump to slide" value={Math.min(index, Math.max(0, slides.length - 1))} onChange={(event) => setIndex(Number(event.target.value))} className="max-w-44 rounded-xl bg-slate-900 px-2 py-2 text-sm text-white">
             {slides.map((slide, slideIndex) => <option key={slide.id} value={slideIndex}>{slideIndex + 1}. {slide.title || slide.groupName}</option>)}
           </select>
           <GlassButton onClick={() => setNotesOpen(true)}>Notes</GlassButton>
@@ -117,8 +113,8 @@ export function PresentationMode({ data }) {
         </div>
       </div>}
       {movieModeOpen ? (
-        <Suspense fallback={<div className="fixed inset-0 z-50 bg-black" />}>
-          <MovieModeOverlay onClose={() => setMovieModeOpen(false)} onSelectGroup={jumpToGroup} groupTargets={movieGroupTargets} />
+        <Suspense fallback={<div role="status" className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black text-white"><span>Loading Movie mode…</span><GlassButton onClick={() => setMovieModeOpen(false)}>Cancel</GlassButton></div>}>
+          <MovieModeOverlay groups={groups} onClose={() => setMovieModeOpen(false)} onSelectGroup={jumpToGroup} groupTargets={movieGroupTargets} />
         </Suspense>
       ) : null}
     </main>

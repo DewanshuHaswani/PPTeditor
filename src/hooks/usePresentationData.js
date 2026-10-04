@@ -1,3 +1,4 @@
+import { localRequest } from "../utils/localPersistence";
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { cloneData } from '../utils/layout';
 import { presentationData } from '../data/presentationData';
@@ -10,17 +11,32 @@ const SAVE_EVENT = `${STORAGE_KEY}-saved`;
 
 function indexedData(mode, data) {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open('ahm-premium-presentation-db', 1);
-    request.onupgradeneeded = () => request.result.createObjectStore('presentation');
-    request.onerror = () => reject(request.error);
+    let finished = false;
+    const finish = (error, value) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      error ? reject(error) : resolve(value);
+    };
+    const timer = setTimeout(() => finish(new Error('Browser backup is unavailable.')), 8000);
+    let request;
+    try { request = indexedDB.open('ahm-premium-presentation-db', 1); }
+    catch (error) { finish(error); return; }
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains('presentation')) request.result.createObjectStore('presentation');
+    };
+    request.onerror = () => finish(request.error);
     request.onsuccess = () => {
       const db = request.result;
-      const transaction = db.transaction('presentation', mode);
-      const store = transaction.objectStore('presentation');
-      const operation = mode === 'readwrite' ? store.put(data, 'current') : store.get('current');
-      // A request succeeding does not mean the transaction committed.
-      transaction.oncomplete = () => { db.close(); resolve(operation.result); };
-      transaction.onerror = transaction.onabort = () => { db.close(); reject(transaction.error || new Error('Browser backup failed.')); };
+      if (finished) { db.close(); return; }
+      try {
+        const transaction = db.transaction('presentation', mode);
+        const store = transaction.objectStore('presentation');
+        const operation = mode === 'readwrite' ? store.put(data, 'current') : store.get('current');
+        // Only a committed transaction is a successful browser backup.
+        transaction.oncomplete = () => { db.close(); finish(null, operation.result); };
+        transaction.onerror = transaction.onabort = () => { db.close(); finish(transaction.error || new Error('Browser backup failed.')); };
+      } catch (error) { db.close(); finish(error); }
     };
   });
 }
@@ -28,17 +44,6 @@ function indexedData(mode, data) {
 function signalSave() {
   try { localStorage.setItem(SIGNAL_KEY, `${Date.now()}-${Math.random()}`); } catch { /* Disk still saved. */ }
   window.dispatchEvent(new Event(SAVE_EVENT));
-}
-
-async function localRequest(method = 'GET', data) {
-  const response = await fetch('/api/presentation', {
-    method, cache: 'no-store',
-    ...(data ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) } : {})
-  });
-  if (!response.headers.get('content-type')?.includes('application/json')) return null;
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.message || 'Local disk save failed.');
-  return result;
 }
 
 export function usePresentationData() {
@@ -56,6 +61,7 @@ export function usePresentationData() {
   const fileHandle = useRef(null);
   const backedUp = useRef(null);
   const diskSaved = useRef(null);
+  const diskSavedAt = useRef(0);
   const readyRef = useRef(false);
 
   const setData = useCallback((updater) => {
@@ -74,36 +80,43 @@ export function usePresentationData() {
 
   useEffect(() => {
     let active = true;
+    let loading = false;
+    let loadVersion = 0;
     const load = async () => {
-      // A focus event in the editor must never replace unsaved input.
-      if (editor && readyRef.current) return;
+      if (editor && (readyRef.current || loading)) return;
+      const version = ++loadVersion;
+      loading = true;
+      let disk = null;
+      let diskError;
       try {
-        let saved;
-        let disk = null;
-        try { disk = await localRequest(); }
-        catch (error) {
-          if (active) setStorage({ mode: 'error', message: error.message });
-          throw error;
+        try { disk = await localRequest(); } catch (error) { diskError = error; }
+        let backup;
+        try { backup = await indexedData('readonly'); } catch { /* Try legacy data. */ }
+        const record = backup?.format === 'ahm-backup-v1' ? backup : { data: backup };
+        let browserData;
+        try { if (record.data) browserData = validatePresentation(record.data); } catch { /* Keep a valid disk or legacy copy. */ }
+        if (!browserData) {
+          try {
+            const legacy = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (legacy) browserData = validatePresentation(legacy);
+          } catch { /* Ignore malformed legacy data. */ }
         }
-        localAvailable.current = !!disk;
-        saved = disk?.data;
-        if (!saved) {
-          try { saved = await indexedData('readonly'); } catch { /* Try legacy data. */ }
-          if (!saved) {
-            try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { /* Use defaults. */ }
-          }
-        }
-        if (!active) return;
+        if (!active || version !== loadVersion) return;
+        const recoverPending = browserData && record.pendingDisk && (!disk?.data || (disk.savedAt || 0) <= (record.baseSavedAt || 0));
+        const saved = recoverPending ? browserData : disk?.data || browserData;
         const next = saved ? validatePresentation(saved) : cloneData(presentationData);
+        localAvailable.current = !!disk;
+        diskSavedAt.current = disk?.savedAt || 0;
         current.current = next;
         commitData(next);
         backedUp.current = next;
-        diskSaved.current = disk?.data ? next : null;
-        setStorage({ mode: disk ? 'local' : 'browser', message: disk ? (disk.data ? 'Saved on disk · .local/presentation.json' : 'Local autosave ready') : 'Browser backup · use Save to Local File for a disk copy' });
+        diskSaved.current = disk?.data && !recoverPending ? next : null;
+        const message = recoverPending ? 'Recovered changes from browser backup · saving to disk…' : disk ? (disk.data ? 'Saved on disk · .local/presentation.json' : 'Preparing local autosave…') : 'Browser backup · use Save to Local File for a disk copy';
+        setStorage({ mode: diskError ? 'error' : disk ? 'local' : 'browser', message: diskError ? `Local save unavailable. ${browserData ? 'Browser backup recovered.' : 'Using the default deck.'} Use Save to Local File for a disk copy.` : message });
       } catch (error) {
-        if (active) setStorage({ mode: 'error', message: `Could not open saved data: ${error.message}` });
+        if (active && version === loadVersion) setStorage({ mode: 'error', message: `Could not open saved data: ${error.message}` });
       } finally {
-        if (active) { readyRef.current = true; setReady(true); }
+        if (active && version === loadVersion) { loading = false; readyRef.current = true; setReady(true); }
       }
     };
     load();
@@ -125,12 +138,15 @@ export function usePresentationData() {
   const persist = useCallback((snapshot, includeDisk = true) => {
     const operation = writeQueue.current.catch(() => {}).then(async () => {
       let browserError;
-      try { await indexedData('readwrite', snapshot); backedUp.current = snapshot; }
+      const pendingDisk = includeDisk && localAvailable.current;
+      try { await indexedData('readwrite', { format: 'ahm-backup-v1', data: snapshot, pendingDisk, baseSavedAt: diskSavedAt.current }); backedUp.current = snapshot; }
       catch (error) { browserError = error; }
       if (includeDisk && localAvailable.current) {
         const saved = await localRequest('PUT', snapshot);
         if (!saved) throw new Error('The local save server is unavailable. Use Export JSON for a disk copy.');
         diskSaved.current = snapshot;
+        diskSavedAt.current = saved.savedAt || 0;
+        try { await indexedData('readwrite', { format: 'ahm-backup-v1', data: snapshot, pendingDisk: false, baseSavedAt: diskSavedAt.current }); backedUp.current = snapshot; } catch { /* Disk copy succeeded. */ }
         signalSave();
         return 'Saved on disk · .local/presentation.json';
       }
@@ -143,12 +159,12 @@ export function usePresentationData() {
   }, []);
 
   useEffect(() => {
-    if (!editor || !ready || data === backedUp.current) return;
+    if (!editor || !ready || (localAvailable.current ? data === diskSaved.current : data === backedUp.current)) return;
     setStorage({ mode: 'saving', message: 'Saving…' });
     const timer = setTimeout(() => {
       persist(data).then((message) => {
         if (data === current.current) setStorage({ mode: localAvailable.current ? 'local' : 'browser', message });
-      }).catch((error) => setStorage({ mode: 'error', message: error.message || 'Autosave failed. Export JSON to keep your changes.' }));
+      }).catch((error) => { if (data === current.current) setStorage({ mode: 'error', message: error.message || 'Autosave failed. Export JSON to keep your changes.' }); });
     }, 800);
     return () => clearTimeout(timer);
   }, [data, editor, ready, persist]);
@@ -183,12 +199,12 @@ export function usePresentationData() {
       setHistoryVersion((value) => value + 1);
     },
     save: async () => {
-      const snapshot = current.current;
       try {
         // Open the picker while the user gesture is still active.
         if (!localAvailable.current && window.showSaveFilePicker && !fileHandle.current) {
-          fileHandle.current = await window.showSaveFilePicker({ suggestedName: `${safeFilename(snapshot.eventTitle)}.json`, types: [{ description: 'Presentation', accept: { 'application/json': ['.json'] } }] });
+          fileHandle.current = await window.showSaveFilePicker({ suggestedName: `${safeFilename(current.current.eventTitle)}.json`, types: [{ description: 'Presentation', accept: { 'application/json': ['.json'] } }] });
         }
+        const snapshot = current.current;
         let message;
         if (localAvailable.current) message = await persist(snapshot);
         else {
@@ -202,9 +218,10 @@ export function usePresentationData() {
             message = 'Local JSON download started. Keep it to reopen your presentation.';
           }
           diskSaved.current = snapshot;
-          try { await persist(snapshot, false); } catch { /* The disk copy succeeded. */ }
+          try { await persist(current.current, false); } catch { /* The disk copy succeeded. */ }
         }
-        setStorage({ mode: 'local', message });
+        if (snapshot === current.current) setStorage({ mode: 'local', message });
+        else setStorage({ mode: localAvailable.current ? 'saving' : 'browser', message: localAvailable.current ? 'Saved earlier edits · saving newer changes…' : 'File saved · newer edits are in browser backup; save again to update the local file' });
         return { ok: true, message };
       } catch (error) {
         if (error.name === 'AbortError') return { ok: false, cancelled: true };

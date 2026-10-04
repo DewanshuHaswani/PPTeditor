@@ -1,3 +1,4 @@
+import { sectionWithBlocks, convertContentBlock } from "../utils/content";
 import { Copy, Download, Eye, FileInput, ImagePlus, LayoutGrid, List, Plus, Quote, Save, Text, Trash2, Upload, Undo2, Redo2, Package } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createContentBlock, createImagePlaceholder, createSection, createSlide } from "../data/presentationData";
@@ -60,42 +61,6 @@ function objectIcon(type) {
   return <Text className="h-4 w-4" />;
 }
 
-function syncBusinessSectionFromBlocks(section, blocks) {
-  if (section.layout !== "business-update") return { ...section, blocks, objectsEdited: true };
-
-  const visibleBlocks = blocks.filter((block) => block.visible !== false);
-  const textLikeBlocks = visibleBlocks.filter((block) => ["text", "quote", "metric"].includes(block.type));
-  const textBlock = textLikeBlocks.find((block) => block.title === "Text") || textLikeBlocks[0];
-  const bulletBlock = visibleBlocks.find((block) => block.type === "bullets");
-  const detailBlocks = textLikeBlocks.filter((block) => block !== textBlock);
-  const imageBlocks = visibleBlocks.filter((block) => block.type === "image");
-
-  const next = { ...section, blocks, objectsEdited: true, text: "", bullets: [], details: [], images: [] };
-
-  if (textBlock) next.text = textBlock.text || "";
-  if (bulletBlock?.bullets?.length) next.bullets = bulletBlock.bullets;
-  else if (detailBlocks.length) next.bullets = detailBlocks.map((block) => block.title || block.text || "Business update").filter(Boolean);
-
-  if (detailBlocks.length) next.details = detailBlocks.map((block) => block.text || block.title || "");
-
-  if (imageBlocks.length) {
-    next.images = imageBlocks.map((block, index) => ({
-      ...(block.image || createImagePlaceholder(block.title || `Image ${index + 1}`)),
-      id: block.image?.id || block.id || crypto.randomUUID(),
-      title: block.image?.title || block.title || `Image ${index + 1}`,
-      subtitle: block.image?.subtitle || block.caption || "",
-      details: block.image?.details || "",
-      caption: block.image?.caption || block.caption || block.title || `Image ${index + 1}`,
-      size: block.image?.size || block.size || "normal",
-      fit: block.image?.fit || "contain",
-      position: block.image?.position || "center",
-      expandable: block.image?.expandable !== false
-    }));
-  }
-
-  return next;
-}
-
 export function EditPortal({ data, actions }) {
   const [selectedSlideId, setSelectedSlideId] = useState(data.slides[0]?.id);
   const [selectedSectionId, setSelectedSectionId] = useState(data.slides[0]?.sections?.[0]?.id);
@@ -108,6 +73,7 @@ export function EditPortal({ data, actions }) {
   const selectedSlide = data.slides[selectedSlideIndex] || data.slides[0];
   const foundSectionIndex = selectedSlide?.sections?.findIndex((section) => section.id === selectedSectionId) ?? -1;
   const selectedSectionIndex = foundSectionIndex >= 0 ? foundSectionIndex : selectedSlide?.sections?.length ? 0 : -1;
+  const hasSections = ["group", "activity", "content"].includes(selectedSlide?.type);
   const selectedSection = selectedSlide?.sections?.[selectedSectionIndex] || selectedSlide?.sections?.[0];
 
   useEffect(() => {
@@ -201,27 +167,23 @@ export function EditPortal({ data, actions }) {
   };
 
   const handleImageUpload = async (file, imageIndex = null) => {
+    const imageId = imageIndex === null ? null : selectedSection.images?.[imageIndex]?.id;
     let src;
     try { src = await fileToDataUrl(file); }
     catch (error) { setSaveNotice({ type: "error", title: "Upload failed", message: error.message }); return; }
     setSection((section) => {
       const images = [...(section.images || [])];
+      const targetIndex = imageIndex === null ? null : images.findIndex((image) => image.id === imageId);
+      if (targetIndex === -1) return section;
+      const previous = targetIndex === null ? {} : images[targetIndex];
       const item = {
-        id: imageIndex === null ? crypto.randomUUID() : images[imageIndex]?.id || crypto.randomUUID(),
-        src,
-        title: imageIndex === null ? images[imageIndex]?.title || file.name : images[imageIndex]?.title || file.name,
-        subtitle: imageIndex === null ? images[imageIndex]?.subtitle || "" : images[imageIndex]?.subtitle || "",
-        details: imageIndex === null ? images[imageIndex]?.details || "" : images[imageIndex]?.details || "",
-        expandable: imageIndex === null ? true : images[imageIndex]?.expandable !== false,
-        caption: imageIndex === null ? file.name : images[imageIndex]?.caption || file.name,
-        role: imageIndex === null ? "gallery" : images[imageIndex]?.role || "gallery",
-        size: imageIndex === null ? "normal" : images[imageIndex]?.size || "normal",
-        fit: imageIndex === null ? "contain" : images[imageIndex]?.fit || "contain",
-        position: imageIndex === null ? "center" : images[imageIndex]?.position || "center",
+        ...createImagePlaceholder(file.name, ""), ...previous,
+        src, id: previous.id || crypto.randomUUID(),
+        title: previous.title ?? file.name, caption: previous.caption ?? file.name,
         isPlaceholder: false
       };
-      if (imageIndex === null) images.push(item);
-      else images[imageIndex] = item;
+      if (targetIndex === null) images.push(item);
+      else images[targetIndex] = item;
       return { ...section, images };
     });
   };
@@ -258,12 +220,12 @@ export function EditPortal({ data, actions }) {
   };
 
   const setBlock = (blockIndex, updater) => {
-    setSection((section) => syncBusinessSectionFromBlocks(section, updateAt(materializeBlocks(section), blockIndex, updater)));
+    setSection((section) => sectionWithBlocks(section, updateAt(materializeBlocks(section), blockIndex, updater)));
   };
 
   const addBlock = (type = "text") => {
     const block = createContentBlock(type);
-    setSection((section) => syncBusinessSectionFromBlocks(section, [...materializeBlocks(section), block]));
+    setSection((section) => sectionWithBlocks(section, [...materializeBlocks(section), block]));
   };
 
   const duplicateBlock = (blockIndex) => {
@@ -275,36 +237,28 @@ export function EditPortal({ data, actions }) {
       if (copy.image) copy.image.id = crypto.randomUUID();
       const next = [...blocks];
       next.splice(blockIndex + 1, 0, copy);
-      return syncBusinessSectionFromBlocks(section, next);
+      return sectionWithBlocks(section, next);
     });
   };
 
   const deleteBlock = (blockIndex) => {
-    setSection((section) => syncBusinessSectionFromBlocks(section, materializeBlocks(section).filter((_, index) => index !== blockIndex)));
+    setSection((section) => sectionWithBlocks(section, materializeBlocks(section).filter((_, index) => index !== blockIndex)));
   };
 
   const convertBlock = (blockIndex, type) => {
     setBlock(blockIndex, (block) => {
-      const converted = {
-        ...block,
-        type,
-        title: block.title || createContentBlock(type).title,
-        image: type === "image" ? block.image || createImagePlaceholder(block.title || "Image Object") : block.image,
-        bullets: type === "bullets" ? block.bullets?.length ? block.bullets : block.text ? block.text.split("\n").filter(Boolean) : ["Editable bullet"] : block.bullets || [],
-        text: type === "image" ? "" : block.text || "",
-        metricValue: type === "metric" ? block.metricValue || "01" : block.metricValue || "",
-        size: type === "image" && block.size === "normal" ? "wide" : block.size || "normal",
-        textSize: block.textSize || "md"
-      };
+      const converted = convertContentBlock(block, type);
+      if (type === "image" && !converted.image) converted.image = createImagePlaceholder(block.title || "Image Object");
       return converted;
     });
   };
 
   const handleBlockImageUpload = async (file, blockIndex) => {
+    const blockId = materializeBlocks(selectedSection)[blockIndex]?.id;
     let src;
     try { src = await fileToDataUrl(file); }
     catch (error) { setSaveNotice({ type: "error", title: "Upload failed", message: error.message }); return; }
-    setBlock(blockIndex, (block) => ({
+    setSection((section) => sectionWithBlocks(section, materializeBlocks(section).map((block) => block.id !== blockId ? block : ({
       ...block,
       type: "image",
       image: {
@@ -324,7 +278,7 @@ export function EditPortal({ data, actions }) {
       },
       caption: block.caption || file.name,
       title: block.title || file.name
-    }));
+    }))));
   };
 
   const handleZip = async () => {
@@ -471,6 +425,7 @@ export function EditPortal({ data, actions }) {
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
+                <SelectInput label="Slide Type" value={selectedSlide.type} onChange={(value) => setSlide((slide) => ({ ...slide, type: value }))} options={["intro", "title", "content", "group", "activity", "quote", "quiz", "timer", "break", "thanks", "leadership"]} />
                 <TextInput label="Title" value={selectedSlide?.title || ""} onChange={(value) => setSlide((slide) => ({ ...slide, title: value }))} />
                 <TextInput label="Subtitle" value={selectedSlide?.subtitle || ""} onChange={(value) => setSlide((slide) => ({ ...slide, subtitle: value }))} />
                 <TextInput label="Group Name" value={selectedSlide?.groupName || ""} onChange={(value) => setSlide((slide) => ({ ...slide, groupName: value }))} />
@@ -493,7 +448,7 @@ export function EditPortal({ data, actions }) {
               </div>
             </EditorCard>
 
-            <EditorCard draggable={false} borderRadius="28px" glowIntensity="none" shadowIntensity="xs" className="border border-slate-200 bg-white p-5 shadow-sm">
+            {hasSections && <EditorCard draggable={false} borderRadius="28px" glowIntensity="none" shadowIntensity="xs" className="border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <div className="text-xs font-black uppercase tracking-[0.18em] text-indigo-500">Sections</div>
@@ -538,7 +493,7 @@ export function EditPortal({ data, actions }) {
                   }
                 </SortableList>
               ) : (
-                <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">This slide type has no sections yet. Add one to create editable content blocks.</p>
+                <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">Add a section to create editable content blocks.</p>
               )}
 
               {selectedSection ? (
@@ -578,9 +533,9 @@ export function EditPortal({ data, actions }) {
                   </div>
                 </div>
               ) : null}
-            </EditorCard>
+            </EditorCard>}
 
-            {selectedSection ? (
+            {hasSections && selectedSection ? (
               <EditorCard draggable={false} borderRadius="28px" glowIntensity="none" shadowIntensity="xs" className="border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <div>
@@ -612,7 +567,7 @@ export function EditPortal({ data, actions }) {
                         const blocks = [...materializeBlocks(section)];
                         const [removed] = blocks.splice(oldIndex, 1);
                         blocks.splice(newIndex, 0, removed);
-                        return syncBusinessSectionFromBlocks(section, blocks);
+                        return sectionWithBlocks(section, blocks);
                       });
                     }}
                     className="space-y-3"
@@ -670,7 +625,7 @@ export function EditPortal({ data, actions }) {
                                   </div>
                                   <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white">
                                     <Upload className="h-4 w-4" /> Upload Image
-                                    <input type="file" accept="image/*" hidden onChange={(event) => event.target.files?.[0] && handleBlockImageUpload(event.target.files[0], blockIndex)} />
+                                    <input type="file" accept="image/*" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (file) handleBlockImageUpload(file, blockIndex); }} />
                                   </label>
                                 </div>
                               </div>
@@ -685,6 +640,12 @@ export function EditPortal({ data, actions }) {
                                   textarea
                                   rows={5}
                                 />
+                                {selectedSection.layout === "business-update" && <TextInput
+                                  label="Bullet Details (separate cards with ---)"
+                                  value={(block.details || selectedSection.details || []).join("\n---\n")}
+                                  onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, details: value.split(/\n---\n/g) }))}
+                                  textarea rows={5}
+                                />}
                               </div>
                             ) : null}
 
@@ -709,7 +670,7 @@ export function EditPortal({ data, actions }) {
                                 </label>
                               ) : null}
                               {!selectedSection.objectsEdited && !selectedSection.blocks?.length ? (
-                                <button onClick={() => setSection((section) => ({ ...section, blocks: materializeBlocks(section) }))} className="rounded-full border border-indigo-200 bg-white px-4 py-2 text-sm font-bold text-indigo-700">
+                                <button onClick={() => setSection((section) => sectionWithBlocks(section, materializeBlocks(section)))} className="rounded-full border border-indigo-200 bg-white px-4 py-2 text-sm font-bold text-indigo-700">
                                   Make Existing Content Editable
                                 </button>
                               ) : null}
@@ -727,7 +688,7 @@ export function EditPortal({ data, actions }) {
               </EditorCard>
             ) : null}
 
-            {selectedSection && !(selectedSection.objectsEdited || selectedSection.blocks?.length) ? (
+            {hasSections && selectedSection && !(selectedSection.objectsEdited || selectedSection.blocks?.length) ? (
               <EditorCard className="border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <div>
@@ -751,7 +712,7 @@ export function EditPortal({ data, actions }) {
                     </button>
                     <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white">
                       <Upload className="h-4 w-4" /> Upload
-                      <input type="file" accept="image/*" hidden onChange={(event) => event.target.files?.[0] && handleImageUpload(event.target.files[0])} />
+                      <input type="file" accept="image/*" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (file) handleImageUpload(file); }} />
                     </label>
                     <button
                       onClick={() => setSection((section) => ({ ...section, images: [...(section.images || []), createImagePlaceholder()] }))}
@@ -888,7 +849,7 @@ export function EditPortal({ data, actions }) {
                             </label>
                             <label className="flex-1 cursor-pointer rounded-full bg-white px-3 py-2 text-center text-xs font-black text-slate-700">
                               Replace
-                              <input type="file" accept="image/*" hidden onChange={(event) => event.target.files?.[0] && handleImageUpload(event.target.files[0], imageIndex)} />
+                              <input type="file" accept="image/*" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (file) handleImageUpload(file, imageIndex); }} />
                             </label>
                             <button
                               onClick={() => setSection((section) => ({ ...section, images: section.images.filter((_, index) => index !== imageIndex) }))}

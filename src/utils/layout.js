@@ -42,6 +42,7 @@ export function legacySectionBlocks(section = {}) {
       id: `${section.id || "section"}-text`,
       type: section.layout === "metrics" ? "metric" : section.layout === "recognition" ? "quote" : "text",
       title: "Text",
+      role: "summary",
       text: section.text,
       bullets: [],
       image: null,
@@ -59,6 +60,7 @@ export function legacySectionBlocks(section = {}) {
       title: "Bullets",
       text: "",
       bullets: section.bullets,
+      details: [...(section.details || [])],
       image: null,
       metricValue: "",
       caption: "",
@@ -119,7 +121,7 @@ export function flattenSlides(data) {
   const flattened = [];
   data.slides.forEach((slide) => {
     const visibleSections = slide.sections?.filter((section) => section.visible !== false) || [];
-    if (slide.type === "group") {
+    if (["group", "activity", "content"].includes(slide.type) && (slide.sections?.length || slide.type === "group")) {
       const packs = [];
       visibleSections.forEach((section) => {
         if (section.fullSlide === false && packs.length) {
@@ -139,8 +141,8 @@ export function flattenSlides(data) {
           activeSections: sections,
           sectionIndex,
           totalSections: packs.length,
-          title: section.title || slide.groupName,
-          subtitle: slide.groupName
+          title: slide.type === "group" ? section.title || slide.groupName : slide.title,
+          subtitle: slide.type === "group" ? slide.groupName : slide.subtitle
         });
       });
       return;
@@ -160,7 +162,8 @@ export function fileToDataUrl(file) {
     if (file.size > 20 * 1024 * 1024) { reject(new Error("Choose an image smaller than 20 MB.")); return; }
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
+    reader.onerror = () => reject(new Error("The image could not be read. Choose the file again."));
+    reader.onabort = () => reject(new Error("Image upload was cancelled."));
     reader.readAsDataURL(file);
   });
 }

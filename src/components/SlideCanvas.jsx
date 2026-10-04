@@ -1,3 +1,4 @@
+import { externalLink } from "../utils/navigation";
 import { createContext, useContext } from "react";
 import { motion } from "framer-motion";
 import { Coffee, ExternalLink, PartyPopper, PencilRuler, Sparkles, Trophy } from "lucide-react";
@@ -90,7 +91,7 @@ function QuoteSlide({ slide }) {
 }
 
 function QuizSlide({ slide, data }) {
-  const link = slide.link || data.kahootLink;
+  const link = externalLink(slide.link || data.kahootLink);
   return (
     <div className="grid min-h-[62vh] w-full max-w-6xl grid-cols-1 items-center gap-8 lg:grid-cols-[1fr_0.78fr]">
       <LiquidGlassCard draggable={false} borderRadius="40px" glowIntensity="md" shadowIntensity="sm" className="border border-white/18 bg-white/14 p-10 shadow-glow">
@@ -100,11 +101,11 @@ function QuizSlide({ slide, data }) {
         <TitleBreath text={slide.title} size={72} />
         <StaggerText text={slide.subtitle} className="mt-3" textClassName="text-2xl font-semibold text-white/70" />
         <StaggerText text={slide.question} className="mt-10" textClassName="text-balance text-4xl font-black leading-tight text-white" stagger={0.008} />
-        <a href={link} target="_blank" rel="noreferrer" className="mt-10 inline-flex">
+        {link ? <a href={link} target="_blank" rel="noreferrer" className="mt-10 inline-flex">
           <GlassButton className="px-7 py-4 text-lg">
             {slide.buttonText || "Start Quiz"} <ExternalLink className="h-5 w-5" />
           </GlassButton>
-        </a>
+        </a> : <p className="mt-10 text-lg text-white/70">Add a valid quiz link in the editor to start the quiz.</p>}
       </LiquidGlassCard>
       <LiquidGlassCard draggable={false} borderRadius="40px" glowIntensity="sm" shadowIntensity="xs" className="border border-white/14 bg-white/10 p-8 shadow-glass">
         <div className="aspect-square rounded-[36px] border border-white/14 bg-[radial-gradient(circle_at_50%_35%,rgba(255,255,255,0.55),rgba(255,255,255,0.08)_36%,transparent_64%)] p-8">
