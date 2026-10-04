@@ -1,5 +1,5 @@
-import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
-import { SortableContext, arrayMove, rectSortingStrategy, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 
@@ -14,7 +14,8 @@ function SortableRow({ id, children, className = "" }) {
     <div ref={setNodeRef} style={style} className={`${isDragging ? "z-20 opacity-80" : ""} ${className}`}>
       <div className="flex items-stretch gap-2">
         <button
-          className="flex min-h-10 w-8 shrink-0 cursor-grab items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 active:cursor-grabbing"
+          type="button"
+          className="flex min-h-10 w-8 shrink-0 touch-none cursor-grab items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 active:cursor-grabbing"
           {...attributes}
           {...listeners}
           aria-label="Drag item"
@@ -28,7 +29,7 @@ function SortableRow({ id, children, className = "" }) {
 }
 
 export function SortableList({ ids, onReorder, children, strategy = "vertical", className = "" }) {
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const sortingStrategy = strategy === "grid" ? rectSortingStrategy : verticalListSortingStrategy;
 
   return (
@@ -39,6 +40,7 @@ export function SortableList({ ids, onReorder, children, strategy = "vertical", 
         if (!over || active.id === over.id) return;
         const oldIndex = ids.indexOf(active.id);
         const newIndex = ids.indexOf(over.id);
+        if (oldIndex < 0 || newIndex < 0) return;
         onReorder(arrayMove(ids, oldIndex, newIndex), oldIndex, newIndex);
       }}
     >

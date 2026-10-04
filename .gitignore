@@ -9,3 +9,7 @@ dist/
 # Environment files
 .env
 .env.*
+
+# Local presentation and generated offline viewer
+.local/
+public/portable-template.html

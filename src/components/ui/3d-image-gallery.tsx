@@ -4,7 +4,7 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState, createContext, useContext } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Environment, Html, Plane, Sphere } from "@react-three/drei";
+import { OrbitControls, Html, Plane, Sphere } from "@react-three/drei";
 import { ArrowRight, Heart, X } from "lucide-react";
 
 export type GalleryCard = {
@@ -397,7 +397,6 @@ export default function StellarCardGallerySingle({
           }}
         >
           <Suspense fallback={null}>
-            <Environment preset="night" />
             <ambientLight intensity={0.4} />
             <pointLight position={[10, 10, 10]} intensity={0.6} />
             <pointLight position={[-10, -10, -10]} intensity={0.3} />

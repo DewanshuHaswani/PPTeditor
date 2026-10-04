@@ -54,3 +54,10 @@ button {
   background: rgba(15, 23, 42, 0.22);
   border-radius: 999px;
 }
+
+/* Keep editing controls light and fit a full slide inside the preview. */
+.editor-portal textarea { resize: vertical; min-height: 5rem; line-height: 1.6; }
+.editor-portal input, .editor-portal textarea, .editor-portal select { font-size: 16px; }
+.editor-preview-stage .min-h-screen { min-height: 900px; }
+.editor-portal button:focus-visible, .editor-portal a:focus-visible { outline: 3px solid #818cf8; outline-offset: 3px; }
+.editor-portal input[type=checkbox] { width: 1rem; height: 1rem; accent-color: #4f46e5; }

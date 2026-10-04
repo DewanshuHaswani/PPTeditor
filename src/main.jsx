@@ -9,6 +9,7 @@ const StoryPresentationMode = lazy(() => import("./components/StoryPresentationM
 
 function App() {
   const [data, actions] = usePresentationData();
+  if (!actions.ready) return <div role="status" className="min-h-screen bg-slate-950 p-8 text-white">Opening presentation…</div>;
   const path = window.location.pathname;
   if (path === "/edit") {
     return (

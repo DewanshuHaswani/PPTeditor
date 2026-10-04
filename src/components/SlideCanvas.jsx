@@ -1,3 +1,4 @@
+import { createContext, useContext } from "react";
 import { motion } from "framer-motion";
 import { Coffee, ExternalLink, PartyPopper, PencilRuler, Sparkles, Trophy } from "lucide-react";
 import { AnimatedText } from "@/components/ui/animated-text";
@@ -9,6 +10,8 @@ import { GlassButton } from "./GlassButton";
 import { SectionRenderer } from "./SectionRenderer";
 import { TimerSlide } from "./TimerSlide";
 
+const PreviewContext = createContext(false);
+
 const slideVariants = {
   initial: { opacity: 0, y: 18, scale: 0.992, filter: "blur(4px)" },
   animate: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" },
@@ -18,7 +21,9 @@ const slideVariants = {
 const groupNames = ["Advance Research Group", "Open Innovation", "Standards Research Group", "IP Group", "People Group"];
 
 function TitleBreath({ text, size = 76, className = "", minWeight = 220, maxWeight = 900 }) {
+  const preview = useContext(PreviewContext);
   if (!text) return null;
+  if (preview) return <div className={`font-black text-white ${className}`} style={{ fontSize: size, lineHeight: 1.12, overflowWrap: "anywhere" }}>{text}</div>;
   return (
     <AnimatedText
       text={text}
@@ -34,12 +39,15 @@ function TitleBreath({ text, size = 76, className = "", minWeight = 220, maxWeig
 }
 
 function StaggerText({ text, className = "", textClassName = "", stagger = 0.012 }) {
+  const preview = useContext(PreviewContext);
   if (!text) return null;
+  if (preview) return <div className={className}><span className={`whitespace-pre-wrap ${textClassName}`}>{text}</span></div>;
   return <BlurredStagger text={text} stagger={stagger} className={`min-w-0 max-w-full ${className}`} textClassName={`max-w-full break-words [overflow-wrap:anywhere] ${textClassName}`} />;
 }
 
 function HeroTitle({ slide }) {
   const isIntro = slide.type === "intro";
+  const preview = useContext(PreviewContext);
   return (
     <LiquidGlassCard draggable={false} borderRadius="40px" glowIntensity="md" shadowIntensity="sm" className="relative mx-auto flex min-h-[62vh] w-full max-w-5xl flex-col items-center justify-center overflow-hidden border border-white/18 bg-white/14 px-10 py-12 text-center shadow-glow">
       <div className="absolute inset-y-0 left-[-30%] w-1/2 bg-gradient-to-r from-transparent via-white/24 to-transparent blur-md animate-sweep" />
@@ -52,7 +60,7 @@ function HeroTitle({ slide }) {
       <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28, duration: 0.7 }} className="mt-7">
         <StaggerText text={slide.subtitle} textClassName="text-2xl font-semibold text-white/78 md:text-4xl" />
       </motion.div>
-      {isIntro ? (
+      {isIntro && !preview ? (
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.42, duration: 0.7 }} className="mt-9 h-32 w-full max-w-4xl">
           <div className="mb-4 text-xs font-black uppercase tracking-[0.26em] text-cyan-100/70">Presenting Groups</div>
           <GooeyText
@@ -131,6 +139,7 @@ function ThanksSlide({ slide }) {
 }
 
 function GroupOrActivity({ slide }) {
+  const preview = useContext(PreviewContext);
   const sections = slide.activeSections || [slide.activeSection || slide.sections?.[0]].filter(Boolean);
   const section = sections[0];
   const isGroup = slide.type === "group";
@@ -153,7 +162,7 @@ function GroupOrActivity({ slide }) {
         {sections.map((item) => (
           <div key={item.id}>
             {sections.length > 1 ? <h2 className="mb-3 text-2xl font-black text-white">{item.title}</h2> : null}
-            <SectionRenderer section={item} />
+            <SectionRenderer section={item} preview={preview} />
           </div>
         ))}
       </div>
@@ -164,8 +173,9 @@ function GroupOrActivity({ slide }) {
 export function SlideCanvas({ slide, data, preview = false }) {
   const theme = slide.theme || "indigo";
   return (
+    <PreviewContext.Provider value={preview}>
     <div className={`relative min-h-screen overflow-hidden ${preview ? "rounded-[28px]" : ""}`}>
-      <Background theme={theme} heroImage={slide.heroImage} />
+      <Background theme={theme} heroImage={slide.heroImage} staticMode={preview} />
       <motion.div
         key={slide.id}
         variants={slideVariants}
@@ -173,7 +183,7 @@ export function SlideCanvas({ slide, data, preview = false }) {
         animate="animate"
         exit="exit"
         transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-        className={`relative z-10 flex min-h-screen items-center justify-center overflow-hidden px-7 py-14 ${preview ? "scale-[0.72] origin-center" : ""}`}
+        className={`relative z-10 flex min-h-screen items-center justify-center overflow-hidden px-7 py-14 `}
       >
         <div className="w-full max-w-[1400px]">
           {slide.type === "intro" || slide.type === "title" ? <HeroTitle slide={slide} /> : null}
@@ -193,5 +203,6 @@ export function SlideCanvas({ slide, data, preview = false }) {
         </div>
       </motion.div>
     </div>
+    </PreviewContext.Provider>
   );
 }

@@ -1,3 +1,4 @@
+import { assetUrl } from "../utils/navigation";
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import StellarCardGallerySingle from "@/components/ui/3d-image-gallery";
@@ -9,35 +10,35 @@ const groupCards = [
     title: "Advance Research Group",
     subtitle: "AI, spatial sensing, quantum-inspired research",
     alt: "Advance Research Group cinematic abstract card",
-    imageUrl: "/assets/movie-mode/advance-research-group.png"
+    imageUrl: assetUrl("/assets/movie-mode/advance-research-group.png")
   },
   {
     id: "open-innovation",
     title: "Open Innovation",
     subtitle: "Startup incubation and strategic partnerships",
     alt: "Open Innovation cinematic abstract card",
-    imageUrl: "/assets/movie-mode/open-innovation.png"
+    imageUrl: assetUrl("/assets/movie-mode/open-innovation.png")
   },
   {
     id: "standards-research-group",
     title: "Standards Research Group",
     subtitle: "6G, Wi-Fi, global standards leadership",
     alt: "Standards Research Group cinematic abstract card",
-    imageUrl: "/assets/movie-mode/standards-research-group.png"
+    imageUrl: assetUrl("/assets/movie-mode/standards-research-group.png")
   },
   {
     id: "ip-group",
     title: "IP Group",
     subtitle: "Patents, invention portfolio, protected ideas",
     alt: "IP Group cinematic abstract card",
-    imageUrl: "/assets/movie-mode/ip-group.png"
+    imageUrl: assetUrl("/assets/movie-mode/ip-group.png")
   },
   {
     id: "people-group",
     title: "People Group",
     subtitle: "Culture, recognition, team connection",
     alt: "People Group cinematic abstract card",
-    imageUrl: "/assets/movie-mode/people-group.png"
+    imageUrl: assetUrl("/assets/movie-mode/people-group.png")
   }
 ];
 

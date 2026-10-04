@@ -165,7 +165,7 @@ function BusinessDetailOverlay({ item, onClose }) {
   if (!item) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-6 backdrop-blur-2xl" onClick={onClose}>
+    <div role="dialog" aria-modal="true" aria-label="Expanded content" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-6 backdrop-blur-2xl" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, y: 18, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -365,7 +365,7 @@ function BusinessUpdate({ section }) {
   );
 }
 
-function Steps({ section }) {
+function Steps({ section, preview = false }) {
   const iconClassName = "h-7 w-7";
   const icons = [
     <MessageCircle className={iconClassName} />,
@@ -383,6 +383,7 @@ function Steps({ section }) {
     icon: icons[index % icons.length]
   }));
 
+  if (preview && features.length) return <div className="grid grid-cols-3 gap-4">{features.map((feature) => <div key={feature.title} className="min-h-44 rounded-3xl border border-white/20 bg-white/15 p-5 text-white"><div className="mb-3 text-xs font-bold">{feature.title}</div><p className="whitespace-pre-wrap font-semibold">{feature.description}</p></div>)}</div>;
   if (features.length) {
     return (
       <Suspense
@@ -689,11 +690,11 @@ function ObjectLayout({ section }) {
   );
 }
 
-export function SectionRenderer({ section }) {
+export function SectionRenderer({ section, preview = false }) {
   const layout = resolveLayout(section);
   if (layout === "business-update") return <BusinessUpdate section={section} />;
-  if (section.blocks?.some((block) => block.visible !== false)) return <ObjectLayout section={section} />;
-  if (layout === "steps") return <Steps section={section} />;
+  if (section.objectsEdited || section.blocks?.some((block) => block.visible !== false)) return <ObjectLayout section={section} />;
+  if (layout === "steps") return <Steps section={section} preview={preview} />;
   if (layout === "bento") return <Bento section={section} />;
   if (layout === "text-heavy") return <TextHeavy section={section} />;
   if (layout === "hero-image") return <Gallery section={section} />;

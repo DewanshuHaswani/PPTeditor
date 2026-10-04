@@ -142,7 +142,7 @@ export const LiquidGlassCard = ({
         {...props}
       >
         <div
-          className={`absolute inset-0 ${blurClasses[blurIntensity]} z-0`}
+          className={`pointer-events-none absolute inset-0 ${blurClasses[blurIntensity]} z-0`}
           style={{
             borderRadius,
             filter: "url(#glass-blur)"
@@ -150,7 +150,7 @@ export const LiquidGlassCard = ({
         />
 
         <div
-          className="absolute inset-0 z-10"
+          className="pointer-events-none absolute inset-0 z-10"
           style={{
             borderRadius,
             boxShadow: glowStyles[glowIntensity]
@@ -158,7 +158,7 @@ export const LiquidGlassCard = ({
         />
 
         <div
-          className="absolute inset-0 z-20"
+          className="pointer-events-none absolute inset-0 z-20"
           style={{
             borderRadius,
             boxShadow: shadowStyles[shadowIntensity]

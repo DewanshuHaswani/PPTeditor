@@ -7,7 +7,8 @@ export function GlassButton({ children, className = "", variant = "default", ...
 
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold shadow-glass outline-none transition duration-200 focus:ring-2 focus:ring-cyan-200/70 ${variants[variant]} ${className}`}
+      type="button"
+      className={`inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold shadow-glass outline-none transition duration-200 disabled:cursor-not-allowed disabled:opacity-40 focus:ring-2 focus:ring-cyan-200/70 ${variants[variant]} ${className}`}
       {...props}
     >
       {children}

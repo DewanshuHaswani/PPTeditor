@@ -1,206 +1,226 @@
-import { useEffect, useMemo, useState } from "react";
-import { cloneData } from "../utils/layout";
-import { presentationData } from "../data/presentationData";
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { cloneData } from '../utils/layout';
+import { presentationData } from '../data/presentationData';
+import { downloadFile, safeFilename, validatePresentation } from '../utils/presentationFile';
+import { exportPortable } from '../utils/portableExport';
 
-const STORAGE_KEY = "ahm-premium-presentation-data";
-const STORAGE_SIGNAL_KEY = "ahm-premium-presentation-data-signal";
-const SAVE_EVENT = "ahm-premium-presentation-data-saved";
-const DB_NAME = "ahm-premium-presentation-db";
-const DB_VERSION = 1;
-const STORE_NAME = "presentation";
-const DATA_KEY = "current";
+const STORAGE_KEY = 'ahm-premium-presentation-data';
+const SIGNAL_KEY = `${STORAGE_KEY}-signal`;
+const SAVE_EVENT = `${STORAGE_KEY}-saved`;
 
-function openPresentationDb() {
+function indexedData(mode, data) {
   return new Promise((resolve, reject) => {
-    if (!("indexedDB" in window)) {
-      reject(new Error("IndexedDB is not available in this browser."));
-      return;
-    }
-
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
+    const request = indexedDB.open('ahm-premium-presentation-db', 1);
+    request.onupgradeneeded = () => request.result.createObjectStore('presentation');
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
       const db = request.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+      const transaction = db.transaction('presentation', mode);
+      const store = transaction.objectStore('presentation');
+      const operation = mode === 'readwrite' ? store.put(data, 'current') : store.get('current');
+      // A request succeeding does not mean the transaction committed.
+      transaction.oncomplete = () => { db.close(); resolve(operation.result); };
+      transaction.onerror = transaction.onabort = () => { db.close(); reject(transaction.error || new Error('Browser backup failed.')); };
     };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error || new Error("Unable to open IndexedDB."));
   });
 }
 
-async function readIndexedData() {
-  const db = await openPresentationDb();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readonly");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.get(DATA_KEY);
-    request.onsuccess = () => resolve(request.result || null);
-    request.onerror = () => reject(request.error || new Error("Unable to read saved presentation."));
-    transaction.oncomplete = () => db.close();
-  });
-}
-
-async function writeIndexedData(data) {
-  const db = await openPresentationDb();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.put(data, DATA_KEY);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error || new Error("Unable to save presentation."));
-    transaction.oncomplete = () => db.close();
-  });
-}
-
-function readLegacyData() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeSaveSignal() {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.setItem(STORAGE_SIGNAL_KEY, String(Date.now()));
-  } catch {
-    // If legacy localStorage is already over quota, IndexedDB still has the data.
-  }
+function signalSave() {
+  try { localStorage.setItem(SIGNAL_KEY, `${Date.now()}-${Math.random()}`); } catch { /* Disk still saved. */ }
   window.dispatchEvent(new Event(SAVE_EVENT));
 }
 
-function migratePresentationData(data) {
-  const copy = cloneData(data);
-  const defaults = cloneData(presentationData);
-  const defaultCollaborationThought = defaults.slides.find((slide) => slide.id === "why-collaboration-matters");
-  const leadership = copy.slides?.find((slide) => slide.id === "leadership-address");
-  const businessGroupIds = ["advance-research-group", "open-innovation", "standards-research-group", "ip-group", "people-group"];
-
-  if (leadership) {
-    leadership.title = "Mohan Roa Goli";
-    leadership.subtitle = "";
-  }
-
-  businessGroupIds.forEach((groupId) => {
-    const slide = copy.slides?.find((item) => item.id === groupId);
-    const defaultSlide = defaults.slides.find((item) => item.id === groupId);
-    const defaultSummaryId = defaultSlide?.sections?.[0]?.id;
-    const currentSummary = slide?.sections?.find((section) => section.id === defaultSummaryId);
-    if (slide && defaultSlide && defaultSummaryId && (!currentSummary || currentSummary.businessUpdateVersion !== 3)) {
-      slide.sections = cloneData(defaultSlide.sections);
-    }
+async function localRequest(method = 'GET', data) {
+  const response = await fetch('/api/presentation', {
+    method, cache: 'no-store',
+    ...(data ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) } : {})
   });
-
-  if (copy.slides && defaultCollaborationThought && !copy.slides.some((slide) => slide.id === "why-collaboration-matters")) {
-    const thankYouIndex = copy.slides.findIndex((slide) => slide.id === "thank-you");
-    const insertIndex = thankYouIndex >= 0 ? thankYouIndex : copy.slides.length;
-    copy.slides.splice(insertIndex, 0, cloneData(defaultCollaborationThought));
-  }
-
-  return copy;
+  if (!response.headers.get('content-type')?.includes('application/json')) return null;
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Local disk save failed.');
+  return result;
 }
 
 export function usePresentationData() {
-  const canPersist = typeof window !== "undefined" && window.location.pathname === "/edit";
-  const [data, setData] = useState(() => {
-    try {
-      const saved = readLegacyData();
-      return saved ? migratePresentationData(saved) : cloneData(presentationData);
-    } catch {
-      return cloneData(presentationData);
+  const editor = window.location.pathname === '/edit';
+  const [data, commitData] = useState(() => cloneData(presentationData));
+  const [ready, setReady] = useState(false);
+  const [storage, setStorage] = useState({ mode: 'loading', message: 'Opening presentation…' });
+  const [historyVersion, setHistoryVersion] = useState(0);
+  const current = useRef(data);
+  const undoStack = useRef([]);
+  const redoStack = useRef([]);
+  const lastEdit = useRef(0);
+  const localAvailable = useRef(false);
+  const writeQueue = useRef(Promise.resolve());
+  const fileHandle = useRef(null);
+  const backedUp = useRef(null);
+  const diskSaved = useRef(null);
+  const readyRef = useRef(false);
+
+  const setData = useCallback((updater) => {
+    const before = current.current;
+    const next = typeof updater === 'function' ? updater(before) : updater;
+    if (next === before) return;
+    if (Date.now() - lastEdit.current > 600 || !undoStack.current.length) {
+      undoStack.current = [...undoStack.current.slice(-39), before];
     }
-  });
-
-  useEffect(() => {
-    if (!canPersist) return;
-    writeIndexedData(data).catch(() => {
-      // Explicit Save Changes reports storage failures; autosave should not break editing.
-    });
-  }, [canPersist, data]);
-
-  useEffect(() => {
-    const loadSavedData = async (rawValue) => {
-      try {
-        const indexedData = await readIndexedData();
-        if (indexedData) {
-          setData(migratePresentationData(indexedData));
-          return;
-        }
-        if (rawValue) setData(migratePresentationData(JSON.parse(rawValue)));
-      } catch {
-        try {
-          const legacyData = readLegacyData();
-          if (legacyData) setData(migratePresentationData(legacyData));
-        } catch {
-          // Ignore malformed local edits and keep the current presentation open.
-        }
-      }
-    };
-
-    const onStorage = (event) => {
-      if (event.key === STORAGE_SIGNAL_KEY || event.key === STORAGE_KEY) loadSavedData(event.newValue);
-    };
-
-    const onSaved = () => {
-      loadSavedData(localStorage.getItem(STORAGE_KEY));
-    };
-
-    const onVisible = () => {
-      if (document.visibilityState === "visible") onSaved();
-    };
-
-    window.addEventListener("storage", onStorage);
-    window.addEventListener(SAVE_EVENT, onSaved);
-    window.addEventListener("focus", onSaved);
-    window.addEventListener("pageshow", onSaved);
-    document.addEventListener("visibilitychange", onVisible);
-    onSaved();
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener(SAVE_EVENT, onSaved);
-      window.removeEventListener("focus", onSaved);
-      window.removeEventListener("pageshow", onSaved);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
+    lastEdit.current = Date.now();
+    redoStack.current = [];
+    current.current = next;
+    commitData(next);
+    setHistoryVersion((value) => value + 1);
   }, []);
 
-  const actions = useMemo(
-    () => ({
-      setData,
-      save: async () => {
-        try {
-          await writeIndexedData(data);
-          writeSaveSignal();
-          return { ok: true, message: "All presentation changes saved." };
-        } catch (error) {
-          return {
-            ok: false,
-            message: error instanceof Error ? error.message : "Unable to save changes."
-          };
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      // A focus event in the editor must never replace unsaved input.
+      if (editor && readyRef.current) return;
+      try {
+        let saved;
+        let disk = null;
+        try { disk = await localRequest(); }
+        catch (error) {
+          if (active) setStorage({ mode: 'error', message: error.message });
+          throw error;
         }
-      },
-      reset: () => {
-        const nextData = cloneData(presentationData);
-        setData(nextData);
-        return nextData;
-      },
-      exportJson: () => {
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "all-hands-presentation.json";
-        link.click();
-        URL.revokeObjectURL(url);
-      },
-      importJson: async (file) => {
-        const text = await file.text();
-        setData(JSON.parse(text));
+        localAvailable.current = !!disk;
+        saved = disk?.data;
+        if (!saved) {
+          try { saved = await indexedData('readonly'); } catch { /* Try legacy data. */ }
+          if (!saved) {
+            try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { /* Use defaults. */ }
+          }
+        }
+        if (!active) return;
+        const next = saved ? validatePresentation(saved) : cloneData(presentationData);
+        current.current = next;
+        commitData(next);
+        backedUp.current = next;
+        diskSaved.current = disk?.data ? next : null;
+        setStorage({ mode: disk ? 'local' : 'browser', message: disk ? (disk.data ? 'Saved on disk · .local/presentation.json' : 'Local autosave ready') : 'Browser backup · use Save to Local File for a disk copy' });
+      } catch (error) {
+        if (active) setStorage({ mode: 'error', message: `Could not open saved data: ${error.message}` });
+      } finally {
+        if (active) { readyRef.current = true; setReady(true); }
       }
-    }),
-    [data]
-  );
+    };
+    load();
+    const onStorage = (event) => { if (event.key === SIGNAL_KEY || event.key === STORAGE_KEY) load(); };
+    const onVisible = () => { if (document.visibilityState === 'visible') load(); };
+    window.addEventListener('storage', onStorage);
+    window.addEventListener(SAVE_EVENT, load);
+    window.addEventListener('focus', load);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      active = false;
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener(SAVE_EVENT, load);
+      window.removeEventListener('focus', load);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [editor]);
 
+  const persist = useCallback((snapshot, includeDisk = true) => {
+    const operation = writeQueue.current.catch(() => {}).then(async () => {
+      let browserError;
+      try { await indexedData('readwrite', snapshot); backedUp.current = snapshot; }
+      catch (error) { browserError = error; }
+      if (includeDisk && localAvailable.current) {
+        const saved = await localRequest('PUT', snapshot);
+        if (!saved) throw new Error('The local save server is unavailable. Use Export JSON for a disk copy.');
+        diskSaved.current = snapshot;
+        signalSave();
+        return 'Saved on disk · .local/presentation.json';
+      }
+      if (browserError) throw browserError;
+      signalSave();
+      return 'Browser backup updated · save a local file to keep a disk copy';
+    });
+    writeQueue.current = operation;
+    return operation;
+  }, []);
+
+  useEffect(() => {
+    if (!editor || !ready || data === backedUp.current) return;
+    setStorage({ mode: 'saving', message: 'Saving…' });
+    const timer = setTimeout(() => {
+      persist(data).then((message) => {
+        if (data === current.current) setStorage({ mode: localAvailable.current ? 'local' : 'browser', message });
+      }).catch((error) => setStorage({ mode: 'error', message: error.message || 'Autosave failed. Export JSON to keep your changes.' }));
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [data, editor, ready, persist]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const onLeave = (event) => {
+      if (localAvailable.current ? current.current !== diskSaved.current : current.current !== backedUp.current) {
+        event.preventDefault(); event.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', onLeave);
+    return () => window.removeEventListener('beforeunload', onLeave);
+  }, [editor]);
+
+  const actions = useMemo(() => ({
+    setData, ready, storage,
+    canUndo: undoStack.current.length > 0,
+    canRedo: redoStack.current.length > 0,
+    undo: () => {
+      const previous = undoStack.current.pop();
+      if (!previous) return;
+      redoStack.current.push(current.current);
+      current.current = previous; commitData(previous); lastEdit.current = 0;
+      setHistoryVersion((value) => value + 1);
+    },
+    redo: () => {
+      const next = redoStack.current.pop();
+      if (!next) return;
+      undoStack.current.push(current.current);
+      current.current = next; commitData(next); lastEdit.current = 0;
+      setHistoryVersion((value) => value + 1);
+    },
+    save: async () => {
+      const snapshot = current.current;
+      try {
+        // Open the picker while the user gesture is still active.
+        if (!localAvailable.current && window.showSaveFilePicker && !fileHandle.current) {
+          fileHandle.current = await window.showSaveFilePicker({ suggestedName: `${safeFilename(snapshot.eventTitle)}.json`, types: [{ description: 'Presentation', accept: { 'application/json': ['.json'] } }] });
+        }
+        let message;
+        if (localAvailable.current) message = await persist(snapshot);
+        else {
+          const json = JSON.stringify(snapshot, null, 2);
+          if (fileHandle.current) {
+            const writable = await fileHandle.current.createWritable();
+            await writable.write(json); await writable.close();
+            message = `Saved to local file · ${fileHandle.current.name}`;
+          } else {
+            downloadFile(new Blob([json], { type: 'application/json' }), `${safeFilename(snapshot.eventTitle)}.json`);
+            message = 'Local JSON download started. Keep it to reopen your presentation.';
+          }
+          diskSaved.current = snapshot;
+          try { await persist(snapshot, false); } catch { /* The disk copy succeeded. */ }
+        }
+        setStorage({ mode: 'local', message });
+        return { ok: true, message };
+      } catch (error) {
+        if (error.name === 'AbortError') return { ok: false, cancelled: true };
+        setStorage({ mode: 'error', message: error.message });
+        return { ok: false, message: error.message };
+      }
+    },
+    reset: () => setData(cloneData(presentationData)),
+    exportJson: () => downloadFile(new Blob([JSON.stringify(current.current, null, 2)], { type: 'application/json' }), `${safeFilename(current.current.eventTitle)}.json`),
+    exportZip: () => exportPortable(current.current),
+    importJson: async (file) => {
+      if (file.size > 100 * 1024 * 1024) throw new Error('Choose a JSON file smaller than 100 MB.');
+      const next = validatePresentation(JSON.parse(await file.text()));
+      setData(next);
+      lastEdit.current = 0;
+    }
+  }), [setData, ready, storage, historyVersion, persist]);
   return [data, actions];
 }

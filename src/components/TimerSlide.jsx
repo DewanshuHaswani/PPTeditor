@@ -1,88 +1,59 @@
-import { RotateCcw, Pause, Play, RefreshCw } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { GlassButton } from "./GlassButton";
-
-const INITIAL_SECONDS = 180;
-
-function formatTime(seconds) {
-  const minutes = Math.floor(seconds / 60);
-  const rest = seconds % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(rest).padStart(2, "0")}`;
-}
+import { RotateCcw, Pause, Play, RefreshCw } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { GlassButton } from './GlassButton';
 
 export function TimerSlide() {
-  const [seconds, setSeconds] = useState(INITIAL_SECONDS);
+  const [customMinutes, setCustomMinutes] = useState('3');
+  const [duration, setDuration] = useState(180);
+  const [seconds, setSeconds] = useState(180);
   const [running, setRunning] = useState(false);
-  const progress = seconds / INITIAL_SECONDS;
+  const deadline = useRef(0);
+  const progress = Math.min(1, seconds / duration);
   const circumference = 2 * Math.PI * 138;
-  const strokeDashoffset = circumference * (1 - progress);
-
   useEffect(() => {
-    if (!running) return undefined;
-    const interval = window.setInterval(() => {
-      setSeconds((value) => {
-        if (value <= 1) {
-          setRunning(false);
-          return 0;
-        }
-        return value - 1;
-      });
-    }, 1000);
-    return () => window.clearInterval(interval);
+    if (!running) return;
+    const update = () => {
+      const remaining = Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000));
+      setSeconds(remaining);
+      if (!remaining) setRunning(false);
+    };
+    update();
+    const interval = setInterval(update, 200);
+    document.addEventListener('visibilitychange', update);
+    return () => { clearInterval(interval); document.removeEventListener('visibilitychange', update); };
   }, [running]);
-
-  const rotation = useMemo(() => (1 - progress) * 360, [progress]);
-
+  const start = () => {
+    if (!seconds || running) return;
+    deadline.current = Date.now() + seconds * 1000;
+    setRunning(true);
+  };
+  const pause = () => {
+    setSeconds(Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000)));
+    setRunning(false);
+  };
+  const choose = (value) => { setRunning(false); setDuration(value); setSeconds(value); setCustomMinutes(String(value / 60)); };
   return (
-    <div className="flex w-full flex-col items-center justify-center gap-8">
-      <div className="relative flex h-[360px] w-[360px] items-center justify-center rounded-full border border-white/16 bg-white/12 shadow-glow backdrop-blur-2xl">
-        <svg viewBox="0 0 320 320" className="absolute inset-5 rotate-[-90deg]">
+    <div className="flex w-full flex-col items-center justify-center gap-6">
+      <div className="flex flex-wrap justify-center gap-2" aria-label="Timer duration">
+        {[60, 180, 300, 600].map((value) => <GlassButton key={value} aria-pressed={duration === value} onClick={() => choose(value)}>{value / 60} min</GlassButton>)}
+        <label className="flex items-center gap-2 text-sm text-white">Custom minutes<input aria-label="Custom timer minutes" type="number" min="1" max="180" value={customMinutes} onChange={(event) => setCustomMinutes(event.target.value)} onBlur={() => { const value = Number(customMinutes); if (Number.isFinite(value) && value >= 1 && value <= 180) choose(Math.round(value * 60)); else setCustomMinutes(String(duration / 60)); }} onKeyDown={(event) => { if (event.key === 'Enter') event.currentTarget.blur(); }} className="w-20 rounded-xl bg-white px-3 py-2 text-slate-950" /></label>
+      </div>
+      <div className={`relative flex h-[min(360px,70vw)] w-[min(360px,70vw)] items-center justify-center rounded-full border border-white/20 ${seconds === 0 ? 'bg-rose-500/30' : 'bg-white/12'} shadow-glow backdrop-blur-2xl`}>
+        <svg viewBox="0 0 320 320" className="absolute inset-5 rotate-[-90deg]" aria-hidden="true">
           <circle cx="160" cy="160" r="138" stroke="rgba(255,255,255,0.16)" strokeWidth="14" fill="none" />
-          <circle
-            cx="160"
-            cy="160"
-            r="138"
-            stroke="white"
-            strokeWidth="14"
-            fill="none"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            className="transition-all duration-500"
-          />
+          <circle cx="160" cy="160" r="138" stroke="white" strokeWidth="14" fill="none" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - progress)} className="transition-all duration-200" />
         </svg>
-        <div
-          className="absolute left-1/2 top-1/2 h-[132px] w-1 origin-bottom rounded-full bg-cyan-100/90"
-          style={{ transform: `translate(-50%, -100%) rotate(${rotation}deg)` }}
-        />
         <div className="relative z-10 text-center">
-          <div className="text-7xl font-black tabular-nums text-white">{formatTime(seconds)}</div>
-          <div className="mt-4 text-xl font-bold text-white/70">{seconds === 0 ? "Time's Up!" : "3-minute round"}</div>
+          <div role="timer" aria-label="Time remaining" className="text-6xl font-black tabular-nums text-white">{String(Math.floor(seconds / 60)).padStart(2, '0')}:{String(seconds % 60).padStart(2, '0')}</div>
+          <div role="status" className="mt-4 text-xl font-bold text-white/70">{seconds === 0 ? "Time's Up!" : running ? 'Round in progress' : `${duration / 60}-minute round`}</div>
         </div>
       </div>
       <div className="flex flex-wrap justify-center gap-3">
-        <GlassButton onClick={() => setRunning(true)}>
-          <Play className="h-4 w-4" /> Start
-        </GlassButton>
-        <GlassButton onClick={() => setRunning(false)}>
-          <Pause className="h-4 w-4" /> Pause
-        </GlassButton>
-        <GlassButton
-          onClick={() => {
-            setRunning(false);
-            setSeconds(INITIAL_SECONDS);
-          }}
-        >
-          <RotateCcw className="h-4 w-4" /> Reset
-        </GlassButton>
-        <GlassButton
-          onClick={() => {
-            setSeconds(INITIAL_SECONDS);
-            setRunning(true);
-          }}
-        >
-          <RefreshCw className="h-4 w-4" /> Restart
-        </GlassButton>
+        <GlassButton disabled={running || !seconds} onClick={start}><Play size={16} />{seconds < duration ? 'Resume' : 'Start'}</GlassButton>
+        <GlassButton disabled={!running} onClick={pause}><Pause size={16} />Pause</GlassButton>
+        <GlassButton onClick={() => { setRunning(false); setSeconds(duration); }}><RotateCcw size={16} />Reset</GlassButton>
+        <GlassButton onClick={() => { deadline.current = Date.now() + duration * 1000; setSeconds(duration); setRunning(true); }}><RefreshCw size={16} />Restart</GlassButton>
+        <GlassButton onClick={() => { if (running) deadline.current += 30000; setSeconds((value) => value + 30); }}>+30 sec</GlassButton>
       </div>
     </div>
   );

@@ -156,6 +156,8 @@ export function cloneData(data) {
 
 export function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith("image/")) { reject(new Error("Choose an image file.")); return; }
+    if (file.size > 20 * 1024 * 1024) { reject(new Error("Choose an image smaller than 20 MB.")); return; }
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
     reader.onerror = reject;

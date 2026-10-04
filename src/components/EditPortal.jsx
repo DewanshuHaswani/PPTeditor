@@ -1,11 +1,15 @@
-import { Copy, Download, Eye, FileInput, ImagePlus, LayoutGrid, List, Plus, Quote, Save, Text, Trash2, Upload } from "lucide-react";
+import { Copy, Download, Eye, FileInput, ImagePlus, LayoutGrid, List, Plus, Quote, Save, Text, Trash2, Upload, Undo2, Redo2, Package } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createContentBlock, createImagePlaceholder, createSection, createSlide, presentationData } from "../data/presentationData";
+import { createContentBlock, createImagePlaceholder, createSection, createSlide } from "../data/presentationData";
 import { blockSizeOptions, blockTypeOptions, fileToDataUrl, flattenSlides, imageFitOptions, imagePositionOptions, layoutOptions, legacySectionBlocks, textSizeOptions } from "../utils/layout";
 import { GlassButton } from "./GlassButton";
-import { SlideCanvas } from "./SlideCanvas";
+import { EditorPreview } from "./EditorPreview";
 import { SortableList } from "./SortableList";
-import { LiquidGlassCard } from "@/components/ui/liquid-weather-glass";
+
+
+function EditorCard({ children, className = "" }) {
+  return <div className={`rounded-3xl ${className}`}>{children}</div>;
+}
 
 const themes = ["indigo", "teal", "blue", "purple", "green", "navy", "warm"];
 
@@ -19,6 +23,7 @@ function TextInput({ label, value, onChange, textarea = false, rows = 3 }) {
     <label className="block">
       <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">{label}</span>
       <Component
+        aria-label={label}
         value={value || ""}
         rows={rows}
         onChange={(event) => onChange(event.target.value)}
@@ -33,6 +38,7 @@ function SelectInput({ label, value, onChange, options }) {
     <label className="block">
       <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">{label}</span>
       <select
+        aria-label={label}
         value={value || options[0]}
         onChange={(event) => onChange(event.target.value)}
         className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
@@ -55,7 +61,7 @@ function objectIcon(type) {
 }
 
 function syncBusinessSectionFromBlocks(section, blocks) {
-  if (section.layout !== "business-update") return { ...section, blocks };
+  if (section.layout !== "business-update") return { ...section, blocks, objectsEdited: true };
 
   const visibleBlocks = blocks.filter((block) => block.visible !== false);
   const textLikeBlocks = visibleBlocks.filter((block) => ["text", "quote", "metric"].includes(block.type));
@@ -64,7 +70,7 @@ function syncBusinessSectionFromBlocks(section, blocks) {
   const detailBlocks = textLikeBlocks.filter((block) => block !== textBlock);
   const imageBlocks = visibleBlocks.filter((block) => block.type === "image");
 
-  const next = { ...section, blocks };
+  const next = { ...section, blocks, objectsEdited: true, text: "", bullets: [], details: [], images: [] };
 
   if (textBlock) next.text = textBlock.text || "";
   if (bulletBlock?.bullets?.length) next.bullets = bulletBlock.bullets;
@@ -94,11 +100,14 @@ export function EditPortal({ data, actions }) {
   const [selectedSlideId, setSelectedSlideId] = useState(data.slides[0]?.id);
   const [selectedSectionId, setSelectedSectionId] = useState(data.slides[0]?.sections?.[0]?.id);
   const [imageCountDraft, setImageCountDraft] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
   const [saveNotice, setSaveNotice] = useState(null);
   const importRef = useRef(null);
   const selectedSlideIndex = Math.max(0, data.slides.findIndex((slide) => slide.id === selectedSlideId));
   const selectedSlide = data.slides[selectedSlideIndex] || data.slides[0];
-  const selectedSectionIndex = selectedSlide?.sections?.findIndex((section) => section.id === selectedSectionId) ?? -1;
+  const foundSectionIndex = selectedSlide?.sections?.findIndex((section) => section.id === selectedSectionId) ?? -1;
+  const selectedSectionIndex = foundSectionIndex >= 0 ? foundSectionIndex : selectedSlide?.sections?.length ? 0 : -1;
   const selectedSection = selectedSlide?.sections?.[selectedSectionIndex] || selectedSlide?.sections?.[0];
 
   useEffect(() => {
@@ -133,7 +142,7 @@ export function EditPortal({ data, actions }) {
   const setSlide = (updater) => {
     actions.setData((current) => ({
       ...current,
-      slides: updateAt(current.slides, selectedSlideIndex, updater)
+      slides: current.slides.map((slide) => slide.id === selectedSlide.id ? updater(slide) : slide)
     }));
   };
 
@@ -141,7 +150,7 @@ export function EditPortal({ data, actions }) {
     if (selectedSectionIndex < 0) return;
     setSlide((slide) => ({
       ...slide,
-      sections: updateAt(slide.sections || [], selectedSectionIndex, updater)
+      sections: (slide.sections || []).map((section) => section.id === selectedSection.id ? updater(section) : section)
     }));
   };
 
@@ -192,7 +201,9 @@ export function EditPortal({ data, actions }) {
   };
 
   const handleImageUpload = async (file, imageIndex = null) => {
-    const src = await fileToDataUrl(file);
+    let src;
+    try { src = await fileToDataUrl(file); }
+    catch (error) { setSaveNotice({ type: "error", title: "Upload failed", message: error.message }); return; }
     setSection((section) => {
       const images = [...(section.images || [])];
       const item = {
@@ -229,17 +240,21 @@ export function EditPortal({ data, actions }) {
   };
 
   const handleSave = async () => {
+    if (busy) return;
+    setBusy(true);
     const result = await actions.save();
+    setBusy(false);
+    if (result?.cancelled) return;
     if (result?.ok) {
-      setSaveNotice({ type: "success", title: "Saved", message: "All presentation changes are saved and available in /present." });
+      setSaveNotice({ type: "success", title: "Saved", message: result.message });
       return;
     }
     setSaveNotice({ type: "error", title: "Save failed", message: result?.message || "Unable to save changes." });
   };
 
   const materializeBlocks = (section) => {
-    if (section.blocks?.length) return section.blocks;
-    return legacySectionBlocks(section).map((block) => ({ ...block, id: crypto.randomUUID() }));
+    if (section.objectsEdited || section.blocks?.length) return section.blocks || [];
+    return legacySectionBlocks(section);
   };
 
   const setBlock = (blockIndex, updater) => {
@@ -257,6 +272,7 @@ export function EditPortal({ data, actions }) {
       const copy = JSON.parse(JSON.stringify(blocks[blockIndex]));
       copy.id = crypto.randomUUID();
       copy.title = `${copy.title || "Object"} Copy`;
+      if (copy.image) copy.image.id = crypto.randomUUID();
       const next = [...blocks];
       next.splice(blockIndex + 1, 0, copy);
       return syncBusinessSectionFromBlocks(section, next);
@@ -285,7 +301,9 @@ export function EditPortal({ data, actions }) {
   };
 
   const handleBlockImageUpload = async (file, blockIndex) => {
-    const src = await fileToDataUrl(file);
+    let src;
+    try { src = await fileToDataUrl(file); }
+    catch (error) { setSaveNotice({ type: "error", title: "Upload failed", message: error.message }); return; }
     setBlock(blockIndex, (block) => ({
       ...block,
       type: "image",
@@ -309,10 +327,41 @@ export function EditPortal({ data, actions }) {
     }));
   };
 
-  const selectedBlocks = selectedSection ? (selectedSection.blocks?.length ? selectedSection.blocks : legacySectionBlocks(selectedSection)) : [];
+  const handleZip = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const result = await actions.exportZip();
+      setSaveNotice({ type: "success", title: "ZIP ready", message: `${result.name} downloaded. Email the ZIP, then extract it and double-click Open Presentation.html.` });
+    } catch (error) {
+      setSaveNotice({ type: "error", title: "Export failed", message: error.message });
+    } finally { setBusy(false); }
+  };
+
+  useEffect(() => {
+    const onKey = (event) => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      if (event.key.toLowerCase() === "s") { event.preventDefault(); handleSave(); }
+      const typing = event.target.closest?.("input, textarea, select, [contenteditable]");
+      if (!typing && event.key.toLowerCase() === "z") { event.preventDefault(); event.shiftKey ? actions.redo() : actions.undo(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [actions, busy]);
+
+  const selectedBlocks = selectedSection ? (selectedSection.objectsEdited || selectedSection.blocks?.length ? selectedSection.blocks || [] : legacySectionBlocks(selectedSection)) : [];
 
   return (
-    <main className="min-h-screen bg-[#eef2f7] text-slate-950">
+    <main className="editor-portal min-h-screen bg-[#eef2f7] text-slate-950">
+      <header className="sticky top-0 z-40 flex flex-wrap items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
+        <strong className="mr-auto text-sm">Presentation Editor</strong>
+        <button onClick={actions.undo} disabled={!actions.canUndo} aria-label="Undo" className="rounded-xl border p-2 disabled:opacity-40"><Undo2 size={18} /></button>
+        <button onClick={actions.redo} disabled={!actions.canRedo} aria-label="Redo" className="rounded-xl border p-2 disabled:opacity-40"><Redo2 size={18} /></button>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={showPreview} onChange={(event) => setShowPreview(event.target.checked)} /> Live preview</label>
+        <GlassButton variant="light" disabled={busy} onClick={handleZip}><Package size={16} /> Export Web ZIP</GlassButton>
+        <GlassButton variant="dark" disabled={busy} onClick={handleSave}><Save size={16} /> {busy ? "Working…" : "Save to Local File"}</GlassButton>
+        <div role="status" className={`w-full text-xs ${actions.storage.mode === "error" ? "text-rose-700" : "text-slate-500"}`}>{actions.storage.message}</div>
+      </header>
       {saveNotice ? (
         <div className="fixed right-5 top-5 z-[100] w-[min(420px,calc(100vw-2.5rem))]" role="status" aria-live="polite">
           <div
@@ -333,7 +382,7 @@ export function EditPortal({ data, actions }) {
         </div>
       ) : null}
       <div className="grid min-h-screen grid-cols-1 xl:grid-cols-[320px_1fr]">
-        <aside className="border-r border-slate-200 bg-white/85 p-4 backdrop-blur-xl">
+        <aside className="border-r border-slate-200 bg-white p-4 xl:sticky xl:top-28 xl:h-[calc(100vh-7rem)] xl:overflow-y-auto">
           <div className="mb-5 flex items-center justify-between">
             <div>
               <div className="text-xs font-black uppercase tracking-[0.2em] text-indigo-500">Edit Portal</div>
@@ -390,15 +439,15 @@ export function EditPortal({ data, actions }) {
           </SortableList>
         </aside>
 
-        <section className="grid grid-cols-1 gap-5 p-5 2xl:grid-cols-[minmax(420px,0.9fr)_minmax(600px,1.1fr)]">
-          <div className="space-y-5">
-            <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="none" shadowIntensity="xs" className="border border-slate-200 bg-white/86 p-5 shadow-sm">
+        <section className={`grid min-w-0 grid-cols-1 items-start gap-5 p-4 ${showPreview ? "xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]" : ""}`}>
+          <div key={`${selectedSlide.id}-${selectedSection?.id || "none"}`} className="min-w-0 space-y-5">
+            <EditorCard draggable={false} borderRadius="28px" glowIntensity="none" shadowIntensity="xs" className="border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="text-xs font-black uppercase tracking-[0.18em] text-indigo-500">Slide Settings</div>
                   <h2 className="text-2xl font-black">{selectedSlide?.title || selectedSlide?.groupName}</h2>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <GlassButton variant="dark" onClick={actions.exportJson}>
                     <Download className="h-4 w-4" /> Export JSON
                   </GlassButton>
@@ -407,7 +456,13 @@ export function EditPortal({ data, actions }) {
                     type="file"
                     accept="application/json"
                     hidden
-                    onChange={(event) => event.target.files?.[0] && actions.importJson(event.target.files[0])}
+                    onChange={async (event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = "";
+                      if (!file) return;
+                      try { await actions.importJson(file); setSaveNotice({ type: "success", title: "Imported", message: "Presentation imported. Use Save to Local File to keep a disk copy." }); }
+                      catch (error) { setSaveNotice({ type: "error", title: "Import failed", message: error.message }); }
+                    }}
                   />
                   <GlassButton variant="light" onClick={() => importRef.current?.click()}>
                     <FileInput className="h-4 w-4" /> Import
@@ -421,23 +476,24 @@ export function EditPortal({ data, actions }) {
                 <TextInput label="Group Name" value={selectedSlide?.groupName || ""} onChange={(value) => setSlide((slide) => ({ ...slide, groupName: value }))} />
                 <SelectInput label="Theme" value={selectedSlide?.theme || "indigo"} onChange={(value) => setSlide((slide) => ({ ...slide, theme: value }))} options={themes} />
                 <TextInput label="Body / Question" value={selectedSlide?.body || selectedSlide?.question || ""} onChange={(value) => setSlide((slide) => ({ ...slide, body: value, question: slide.question !== undefined ? value : slide.question }))} textarea rows={4} />
+                <TextInput label="Speaker Notes" value={selectedSlide?.notes || ""} onChange={(value) => setSlide((slide) => ({ ...slide, notes: value }))} textarea rows={3} />
                 <TextInput label="Kahoot / Link" value={selectedSlide?.link || ""} onChange={(value) => setSlide((slide) => ({ ...slide, link: value }))} />
               </div>
 
               <div className="mt-5 flex flex-wrap gap-2">
-                <GlassButton variant="light" onClick={handleSave}>
-                  <Save className="h-4 w-4" /> Save Changes
+                <GlassButton variant="light" disabled={busy} onClick={handleSave}>
+                  <Save className="h-4 w-4" /> Save to Local File
                 </GlassButton>
-                <GlassButton variant="light" onClick={actions.reset}>
+                <GlassButton variant="light" onClick={() => { if (window.confirm("Reset the entire presentation to defaults? You can undo this change.")) actions.reset(); }}>
                   Reset to Default
                 </GlassButton>
                 <div className="w-full text-xs font-semibold text-slate-500">
-                  One Save Changes button saves the entire presentation, including all slides, sections, business updates, images, and layout settings.
+                  Save keeps all slides, text, images and layouts in a local JSON file. Export Web ZIP creates an offline presentation you can email.
                 </div>
               </div>
-            </LiquidGlassCard>
+            </EditorCard>
 
-            <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="none" shadowIntensity="xs" className="border border-slate-200 bg-white/86 p-5 shadow-sm">
+            <EditorCard draggable={false} borderRadius="28px" glowIntensity="none" shadowIntensity="xs" className="border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <div className="text-xs font-black uppercase tracking-[0.18em] text-indigo-500">Sections</div>
@@ -489,21 +545,23 @@ export function EditPortal({ data, actions }) {
                 <div className="grid gap-4">
                   <TextInput label="Section Title" value={selectedSection.title} onChange={(value) => setSection((section) => ({ ...section, title: value }))} />
                   <SelectInput label="Layout" value={selectedSection.layout || "auto"} onChange={(value) => setSection((section) => ({ ...section, layout: value }))} options={layoutOptions} />
+                  {!(selectedSection.objectsEdited || selectedSection.blocks?.length) ? <>
                   <TextInput label="Section Text" value={selectedSection.text} onChange={(value) => setSection((section) => ({ ...section, text: value }))} textarea rows={7} />
                   <TextInput
                     label="Bullet Points (one per line)"
                     value={(selectedSection.bullets || []).join("\n")}
-                    onChange={(value) => setSection((section) => ({ ...section, bullets: value.split("\n").map((item) => item.trim()).filter(Boolean) }))}
+                    onChange={(value) => setSection((section) => ({ ...section, bullets: value.split("\n") }))}
                     textarea
                     rows={6}
                   />
                   <TextInput
                     label="Expanded Details (separate cards with ---)"
                     value={(selectedSection.details || []).join("\n---\n")}
-                    onChange={(value) => setSection((section) => ({ ...section, details: value.split(/\n---\n/g).map((item) => item.trim()).filter(Boolean) }))}
+                    onChange={(value) => setSection((section) => ({ ...section, details: value.split(/\n---\n/g) }))}
                     textarea
                     rows={6}
                   />
+                  </> : <p className="text-sm text-slate-500">Edit text, bullets and images in the Object Editor below.</p>}
                   <div className="grid grid-cols-2 gap-3">
                     <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm font-bold">
                       <input type="checkbox" checked={selectedSection.visible !== false} onChange={(event) => setSection((section) => ({ ...section, visible: event.target.checked }))} />
@@ -520,10 +578,10 @@ export function EditPortal({ data, actions }) {
                   </div>
                 </div>
               ) : null}
-            </LiquidGlassCard>
+            </EditorCard>
 
             {selectedSection ? (
-              <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="none" shadowIntensity="xs" className="border border-slate-200 bg-white/86 p-5 shadow-sm">
+              <EditorCard draggable={false} borderRadius="28px" glowIntensity="none" shadowIntensity="xs" className="border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <div className="text-xs font-black uppercase tracking-[0.18em] text-indigo-500">Object Editor</div>
@@ -623,7 +681,7 @@ export function EditPortal({ data, actions }) {
                                 <TextInput
                                   label="Bullet Lines"
                                   value={(block.bullets || []).join("\n")}
-                                  onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, bullets: value.split("\n").map((line) => line.trim()).filter(Boolean) }))}
+                                  onChange={(value) => setBlock(blockIndex, (item) => ({ ...item, bullets: value.split("\n") }))}
                                   textarea
                                   rows={5}
                                 />
@@ -650,7 +708,7 @@ export function EditPortal({ data, actions }) {
                                   Expand on click
                                 </label>
                               ) : null}
-                              {!selectedSection.blocks?.length ? (
+                              {!selectedSection.objectsEdited && !selectedSection.blocks?.length ? (
                                 <button onClick={() => setSection((section) => ({ ...section, blocks: materializeBlocks(section) }))} className="rounded-full border border-indigo-200 bg-white px-4 py-2 text-sm font-bold text-indigo-700">
                                   Make Existing Content Editable
                                 </button>
@@ -666,11 +724,11 @@ export function EditPortal({ data, actions }) {
                     No objects yet. Add a text, image, or bullet object to build this section.
                   </div>
                 )}
-              </LiquidGlassCard>
+              </EditorCard>
             ) : null}
 
-            {selectedSection ? (
-              <LiquidGlassCard draggable={false} borderRadius="28px" glowIntensity="none" shadowIntensity="xs" className="border border-slate-200 bg-white/86 p-5 shadow-sm">
+            {selectedSection && !(selectedSection.objectsEdited || selectedSection.blocks?.length) ? (
+              <EditorCard className="border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <div className="text-xs font-black uppercase tracking-[0.18em] text-indigo-500">Image Management</div>
@@ -844,16 +902,14 @@ export function EditPortal({ data, actions }) {
                     ))
                   }
                 </SortableList>
-              </LiquidGlassCard>
+              </EditorCard>
             ) : null}
           </div>
 
-          <LiquidGlassCard draggable={false} borderRadius="32px" glowIntensity="sm" shadowIntensity="xs" className="sticky top-5 h-[calc(100vh-2.5rem)] overflow-hidden border border-slate-200 bg-slate-950 shadow-2xl">
-            <div className="absolute left-5 top-5 z-20 rounded-full border border-white/15 bg-white/12 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white/70 backdrop-blur-xl">
-              Live Preview
-            </div>
-            {previewSlide ? <SlideCanvas slide={previewSlide} data={data} preview /> : null}
-          </LiquidGlassCard>
+          {showPreview && <div className="min-w-0 rounded-3xl border border-slate-200 bg-slate-950 p-3 shadow-xl xl:sticky xl:top-28">
+            <div className="mb-3 flex items-center justify-between px-2 text-xs font-bold text-white/70"><span>LIVE PREVIEW</span><a href="/present" target="_blank" rel="noreferrer">Open full presentation ↗</a></div>
+            {previewSlide && <EditorPreview slide={previewSlide} kahootLink={data.kahootLink} />}
+          </div>}
         </section>
       </div>
     </main>
