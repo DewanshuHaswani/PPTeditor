@@ -1,0 +1,101 @@
+[
+  {
+    "id": "hook",
+    "start": 0,
+    "end": 6,
+    "duration": 6,
+    "headline": "Make the room lean in.",
+    "visual": "A layered cascade of actual presentation screenshots resolves into the All Hands product mark. Large editorial type, confident fast entrance, then hold.",
+    "voice": "Ideas deserve more than another ordinary slide. Meet All Hands."
+  },
+  {
+    "id": "editor",
+    "start": 6,
+    "end": 14,
+    "duration": 8,
+    "headline": "Your ideas. In focus.",
+    "visual": "Real editor full view, then a continuous punch into Title, typing Ideas in motion, with the live preview updating. Cursor press and restrained keyboard ticks.",
+    "voice": "Start with your story. Edit titles and text, organize slides, and watch your live preview take shape."
+  },
+  {
+    "id": "objects",
+    "start": 14,
+    "end": 23,
+    "duration": 9,
+    "headline": "Build with the right pieces.",
+    "visual": "Actual content editor and object cards. Text, bullets, metric, quote, image labels arrive with card motion; show add or selection, size and visibility controls.",
+    "voice": "Bring text, bullet points, metrics, quotes, and images together. Resize, reorder, duplicate, or hide the pieces you need."
+  },
+  {
+    "id": "images",
+    "start": 23,
+    "end": 31,
+    "duration": 8,
+    "headline": "Give every detail a place.",
+    "visual": "Actual image settings and rendered image detail dialog. A supplied generated stage image is uploaded into the real demo deck. Crop / contain / expand labels with pointer actions.",
+    "voice": "Upload your own visuals. Control how images fit, then let the audience open them for a closer look."
+  },
+  {
+    "id": "layouts",
+    "start": 31,
+    "end": 39,
+    "duration": 8,
+    "headline": "One story. Many possibilities.",
+    "visual": "Three actual slide screenshots on a choreographed gallery: business update, quote, activity/quiz. Themes and layout chooser proof. No claims of AI generation.",
+    "voice": "Choose layouts and themes for team updates, activities, quotes, quizzes, and more. Keep every section part of the story."
+  },
+  {
+    "id": "present",
+    "start": 39,
+    "end": 47,
+    "duration": 8,
+    "headline": "Own the moment.",
+    "visual": "Real live viewer toolbar punch, keyboard arrows to next slide, Notes opens. Fullscreen and blank shortcuts appear as accurate editorial labels. Clock/elapsed cropped proof.",
+    "voice": "Present with keyboard controls, speaker notes, fullscreen, and a blank screen when you need the room. Track the session at a glance."
+  },
+  {
+    "id": "modes",
+    "start": 47,
+    "end": 56,
+    "duration": 9,
+    "headline": "More ways to tell it.",
+    "visual": "Real Story view scrolling through slide panels, then actual Movie mode with group gallery and cursor selecting Design Team.",
+    "voice": "Move through your deck as a scrolling story. Or open Movie mode and jump straight into the group you want."
+  },
+  {
+    "id": "timer",
+    "start": 56,
+    "end": 65,
+    "duration": 9,
+    "headline": "Keep the energy moving.",
+    "visual": "Actual timer choose one minute, Start, countdown, Pause, +30 sec. Time typography oversized with accurate helper labels.",
+    "voice": "Keep activities on track with a built-in timer. Pick a preset or custom duration. Pause, resume, restart, or add thirty seconds."
+  },
+  {
+    "id": "save",
+    "start": 65,
+    "end": 74,
+    "duration": 9,
+    "headline": "Your work. Saved locally.",
+    "visual": "Real Save to Local File action and saved on disk status. Graphical local JSON file anchored to actual editor capture; undo and redo callouts.",
+    "voice": "Save your presentation to a local file. Undo and redo while you edit, and keep an editable JSON copy for later."
+  },
+  {
+    "id": "share",
+    "start": 74,
+    "end": 85,
+    "duration": 11,
+    "headline": "Send a whole experience.",
+    "visual": "Actual Export Web ZIP action, then labeled three-step process ZIP \u2192 Extract \u2192 double-click Open Presentation.html. Actual offline HTML opens to same presentation screenshot. Must state email attachment, not automatic send.",
+    "voice": "Export a web ZIP and email it. Extract, then double-click Open Presentation. Your live deck, images, and modes open offline."
+  },
+  {
+    "id": "outro",
+    "start": 85,
+    "end": 92,
+    "duration": 7,
+    "headline": "Made for your next big idea.",
+    "visual": "Actual hero slide with elegant All Hands mark, three audience tags Teams / Teachers / Creators, final stable hold. No external creator attribution or open-source mention.",
+    "voice": "For teams, classrooms, workshops, and creative pitches. Make it memorable. All Hands."
+  }
+]

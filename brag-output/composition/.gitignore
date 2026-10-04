@@ -1,0 +1,5 @@
+
+# Machine-specific diagnostics / render caches
+check-report.json
+.hyperframes/
+node_modules/

@@ -1,0 +1,12 @@
+import {spawnSync} from 'node:child_process';
+import {readFile,writeFile,rename,stat} from 'node:fs/promises';
+const dir=new URL('.',import.meta.url).pathname;
+const run=args=>{const r=spawnSync('ffmpeg',['-hide_banner','-nostats','-y',...args],{cwd:dir,encoding:'utf8',maxBuffer:10*1024*1024});if(r.status!==0)throw new Error(r.stderr);return r.stderr;};
+const first=run(['-i','brag.mp4','-vn','-af','loudnorm=I=-16:TP=-1.5:LRA=7:print_format=json','-f','null','-']);
+const measured=JSON.parse(first.slice(first.lastIndexOf('{'),first.lastIndexOf('}')+1));
+const filter=`loudnorm=I=-16:TP=-1.5:LRA=7:measured_I=${measured.input_i}:measured_TP=${measured.input_tp}:measured_LRA=${measured.input_lra}:measured_thresh=${measured.input_thresh}:offset=${measured.target_offset}:linear=false:print_format=json`;
+const second=run(['-i','brag.mp4','-map','0:v','-map','0:a','-c:v','copy','-af',filter,'-ar','48000','-c:a','aac','-b:a','256k','-movflags','+faststart','brag.mastered.mp4']);
+await rename(dir+'brag.mastered.mp4',dir+'brag.mp4');
+const analysis=run(['-i','brag.mp4','-vn','-af','ebur128=peak=true','-f','null','-']);await writeFile(dir+'audio-analysis.txt',analysis.slice(analysis.lastIndexOf('Summary:')).split('\n[out#')[0]+'\n');
+const verification=JSON.parse(await readFile(dir+'export-verification.json','utf8'));verification.audioMastering={targetLUFS:-16,targetTruePeakDBTP:-1.5,method:'Two-pass EBU R128 loudness normalization; unchanged video stream',sourceMeasured:measured};
+const probe=spawnSync('ffprobe',['-v','error','-show_format','-show_streams','-of','json','brag.mp4'],{cwd:dir,encoding:'utf8'});verification.video=JSON.parse(probe.stdout);verification.sizeBytes=(await stat(dir+'brag.mp4')).size;await writeFile(dir+'export-verification.json',JSON.stringify(verification,null,2));console.log(analysis.slice(analysis.lastIndexOf('Summary:')));

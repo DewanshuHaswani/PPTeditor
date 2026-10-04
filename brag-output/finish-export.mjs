@@ -1,0 +1,16 @@
+import {spawnSync} from 'node:child_process';
+import {readFile,writeFile,rename,stat} from 'node:fs/promises';
+const dir=new URL('.',import.meta.url).pathname;
+const run=(args)=>{const r=spawnSync('ffmpeg',['-hide_banner','-y',...args],{cwd:dir,encoding:'utf8',maxBuffer:30*1024*1024});if(r.status!==0)throw new Error(r.stderr);return r.stderr;};
+const probe=(f)=>{const r=spawnSync('ffprobe',['-v','error','-show_format','-show_streams','-of','json',f],{cwd:dir,encoding:'utf8'});if(r.status!==0)throw new Error(r.stderr);return JSON.parse(r.stdout);};
+const before=probe('brag.mp4');const v=before.streams.find(s=>s.codec_type==='video');
+if(v.width!==1920||v.height!==1080||v.r_frame_rate!=='30/1'||Math.abs(Number(v.duration)-92)>.04)throw new Error('Unexpected video contract');
+run(['-ss','2.8','-i','brag.mp4','-frames:v','1','-q:v','2','brag.jpg']);
+run(['-i','brag.mp4','-i','brag.jpg','-filter_complex',"[0:v][1:v]overlay=0:0:enable='eq(n,0)'[v]",'-map','[v]','-map','0:a?','-c:v','libx264','-crf','16','-preset','slow','-pix_fmt','yuv420p','-c:a','copy','-movflags','+faststart','-metadata','title=All Hands — Ideas in motion','-metadata','comment=Music: Happy Beats & Business Moves Vol. 12 by Sascha Ende — ende.app. CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ ; trimmed and mixed with narration.','brag.poster.mp4']);
+const after=probe('brag.poster.mp4');const nv=after.streams.find(s=>s.codec_type==='video');if(nv.nb_frames!==v.nb_frames||nv.duration!==v.duration)throw new Error('Poster insertion changed timing');
+await rename(dir+'brag.poster.mp4',dir+'brag.mp4');
+const audioLog=run(['-i','brag.mp4','-af','ebur128=peak=true','-f','null','-']);
+await writeFile(dir+'audio-analysis.txt',audioLog.slice(audioLog.lastIndexOf('Summary:'))+'\n');
+const qc={video:probe('brag.mp4'),sizeBytes:(await stat(dir+'brag.mp4')).size,posterTimestamp:2.8,posterBakedIntoFrameZero:true,frameCountPreserved:true,expected:{width:1920,height:1080,fps:30,duration:92},audioAnalysis:'audio-analysis.txt'};
+if(qc.sizeBytes>=100*1024*1024)throw new Error('MP4 is too large for ordinary GitHub file upload; revise encode before push');
+await writeFile(dir+'export-verification.json',JSON.stringify(qc,null,2));console.log(JSON.stringify({sizeBytes:qc.sizeBytes,frames:nv.nb_frames,duration:nv.duration,poster:'brag.jpg'}));

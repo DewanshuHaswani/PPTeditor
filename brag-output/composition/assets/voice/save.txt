@@ -1,0 +1,1 @@
+Save your presentation to a local file. Undo and redo while you edit, and keep an editable JSON copy for later.

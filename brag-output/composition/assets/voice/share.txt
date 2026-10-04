@@ -1,0 +1,1 @@
+Export a web ZIP and email it. Extract, then double-click Open Presentation. Your live deck, images, and modes open offline.

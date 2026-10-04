@@ -1,0 +1,11 @@
+composition/.hyperframes/
+composition/.hf-tmp/
+composition/snapshots/
+composition/node_modules/
+*.poster.mp4
+*.unposter.mp4
+*.draft.mp4
+work-*/
+.*.hf-transaction-*/
+composition/.thumbnails/
+*.mastered.mp4

@@ -1,0 +1,112 @@
+[
+  {
+    "id": "hook",
+    "duration": 3.925333,
+    "slotStart": 0,
+    "slotDuration": 6,
+    "path": "assets/voice/hook.wav",
+    "voice": "af_heart",
+    "speed": 1.08,
+    "text": "Ideas deserve more than another ordinary slide. Meet All Hands."
+  },
+  {
+    "id": "editor",
+    "duration": 5.866667,
+    "slotStart": 6,
+    "slotDuration": 8,
+    "path": "assets/voice/editor.wav",
+    "voice": "af_heart",
+    "speed": 1.08,
+    "text": "Start with your story. Edit titles and text, organize slides, and watch your live preview take shape."
+  },
+  {
+    "id": "objects",
+    "duration": 7.296,
+    "slotStart": 14,
+    "slotDuration": 9,
+    "path": "assets/voice/objects.wav",
+    "voice": "af_heart",
+    "speed": 1.08,
+    "text": "Bring text, bullet points, metrics, quotes, and images together. Resize, reorder, duplicate, or hide the pieces you need."
+  },
+  {
+    "id": "images",
+    "duration": 5.888,
+    "slotStart": 23,
+    "slotDuration": 8,
+    "path": "assets/voice/images.wav",
+    "voice": "af_heart",
+    "speed": 1.08,
+    "text": "Upload your own visuals. Control how images fit, then let the audience open them for a closer look."
+  },
+  {
+    "id": "layouts",
+    "duration": 6.976,
+    "slotStart": 31,
+    "slotDuration": 8,
+    "path": "assets/voice/layouts.wav",
+    "voice": "af_heart",
+    "speed": 1.08,
+    "text": "Choose layouts and themes for team updates, activities, quotes, quizzes, and more. Keep every section part of the story."
+  },
+  {
+    "id": "present",
+    "duration": 7.125333,
+    "slotStart": 39,
+    "slotDuration": 8,
+    "path": "assets/voice/present.wav",
+    "voice": "af_heart",
+    "speed": 1.08,
+    "text": "Present with keyboard controls, speaker notes, fullscreen, and a blank screen when you need the room. Track the session at a glance."
+  },
+  {
+    "id": "modes",
+    "duration": 5.546667,
+    "slotStart": 47,
+    "slotDuration": 9,
+    "path": "assets/voice/modes.wav",
+    "voice": "af_heart",
+    "speed": 1.08,
+    "text": "Move through your deck as a scrolling story. Or open Movie mode and jump straight into the group you want."
+  },
+  {
+    "id": "timer",
+    "duration": 8.32,
+    "slotStart": 56,
+    "slotDuration": 9,
+    "path": "assets/voice/timer.wav",
+    "voice": "af_heart",
+    "speed": 1.08,
+    "text": "Keep activities on track with a built-in timer. Pick a preset or custom duration. Pause, resume, restart, or add thirty seconds."
+  },
+  {
+    "id": "save",
+    "duration": 7.274667,
+    "slotStart": 65,
+    "slotDuration": 9,
+    "path": "assets/voice/save.wav",
+    "voice": "af_heart",
+    "speed": 1.08,
+    "text": "Save your presentation to a local file. Undo and redo while you edit, and keep an editable JSON copy for later."
+  },
+  {
+    "id": "share",
+    "duration": 8.832,
+    "slotStart": 74,
+    "slotDuration": 11,
+    "path": "assets/voice/share.wav",
+    "voice": "af_heart",
+    "speed": 1.08,
+    "text": "Export a web ZIP and email it. Extract, then double-click Open Presentation. Your live deck, images, and modes open offline."
+  },
+  {
+    "id": "outro",
+    "duration": 4.992,
+    "slotStart": 85,
+    "slotDuration": 7,
+    "path": "assets/voice/outro.wav",
+    "voice": "af_heart",
+    "speed": 1.08,
+    "text": "For teams, classrooms, workshops, and creative pitches. Make it memorable. All Hands."
+  }
+]

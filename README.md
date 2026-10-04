@@ -48,3 +48,9 @@ npm run verify
 The build prepares `public/portable-template.html`, then copies it into `dist/`. Both are generated, ignored files. Keep the template when deploying `dist/` to a static host so ZIP export is available. Run `npm run build` before `npm run verify`. The browser regression script tests the production preview server with an isolated temporary data directory, checks typing, disk save/reload, import validation, undo/redo, mobile layout, and opens the exported HTML offline. It also covers multiple sections, more than six mixed objects, hidden objects, business details, custom Movie groups, embedded section images, network failure and recovery after a failed disk save. Set `AHM_VERIFY_DEV=1` to check the development server instead. It uses installed Google Chrome on macOS, Playwright Chromium elsewhere, or `CHROME_PATH` when provided. Run `npx playwright install chromium` if Chromium is missing.
 
 Local user data lives in ignored `.local/`, and is never committed. `AHM_DATA_ROOT` can redirect the local save directory, including for isolated regression tests.
+
+## Launch film
+
+[![All Hands — Ideas in motion](brag-output/brag.jpg)](brag-output/brag.mp4)
+
+Watch the [finished 1080p launch film](brag-output/brag.mp4), featuring the real editor, live presentation modes, timer, local saves and offline sharing. The [editable composition and production notes](brag-output/README.md) are included.

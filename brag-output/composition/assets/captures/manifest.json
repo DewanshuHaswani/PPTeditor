@@ -1,0 +1,296 @@
+{
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "fictionalDemo": true,
+  "captures": {
+    "editor-before": {
+      "file": "editor-before.png",
+      "description": "Initial title selected, live preview beside real editing controls",
+      "targets": {
+        "title": {
+          "x": 731,
+          "y": 220,
+          "width": 358,
+          "height": 46,
+          "cx": 910,
+          "cy": 243
+        },
+        "save": {
+          "x": 1729.734375,
+          "y": 12,
+          "width": 174.265625,
+          "height": 38,
+          "cx": 1816.8671875,
+          "cy": 31
+        }
+      }
+    },
+    "editor-after": {
+      "file": "editor-after.png",
+      "description": "Title edited, live preview updated",
+      "targets": {
+        "title": {
+          "x": 731,
+          "y": 220,
+          "width": 358,
+          "height": 46,
+          "cx": 910,
+          "cy": 243
+        }
+      }
+    },
+    "objects": {
+      "file": "objects.png",
+      "description": "Real object editor with conversion, sizing, visibility and order controls",
+      "targets": {
+        "convert": {
+          "x": 581.5,
+          "y": 767.15625,
+          "width": 155.5,
+          "height": 46,
+          "cx": 659.25,
+          "cy": 790.15625
+        },
+        "size": {
+          "x": 749,
+          "y": 767.15625,
+          "width": 155.5,
+          "height": 46,
+          "cx": 826.75,
+          "cy": 790.15625
+        },
+        "text": {
+          "x": 781.421875,
+          "y": 537.15625,
+          "width": 85.359375,
+          "height": 38,
+          "cx": 824.1015625,
+          "cy": 556.15625
+        }
+      }
+    },
+    "image-settings": {
+      "file": "image-settings.png",
+      "description": "Actual uploaded image fit, crop and expansion controls",
+      "targets": {
+        "fit": {
+          "x": 610,
+          "y": 878.3125,
+          "width": 225,
+          "height": 46,
+          "cx": 722.5,
+          "cy": 901.3125
+        },
+        "crop": {
+          "x": 847,
+          "y": 878.3125,
+          "width": 225,
+          "height": 46,
+          "cx": 959.5,
+          "cy": 901.3125
+        },
+        "upload": {
+          "x": 610,
+          "y": 936.3125,
+          "width": 150.90625,
+          "height": 36,
+          "cx": 685.453125,
+          "cy": 954.3125
+        }
+      }
+    },
+    "save-status": {
+      "file": "save-status.png",
+      "description": "Actual local disk save confirmation",
+      "targets": {
+        "save": {
+          "x": 1729.734375,
+          "y": 12,
+          "width": 174.265625,
+          "height": 38,
+          "cx": 1816.8671875,
+          "cy": 31
+        },
+        "undo": {
+          "x": 1343.453125,
+          "y": 13,
+          "width": 36,
+          "height": 36,
+          "cx": 1361.453125,
+          "cy": 31
+        },
+        "redo": {
+          "x": 1391.453125,
+          "y": 13,
+          "width": 36,
+          "height": 36,
+          "cx": 1409.453125,
+          "cy": 31
+        }
+      }
+    },
+    "export-action": {
+      "file": "export-action.png",
+      "description": "Export Web ZIP button in real editor toolbar",
+      "targets": {
+        "export": {
+          "x": 1555.734375,
+          "y": 12,
+          "width": 162,
+          "height": 38,
+          "cx": 1636.734375,
+          "cy": 31
+        }
+      }
+    },
+    "hero": {
+      "file": "hero.png",
+      "description": "Actual live title deck, fictional workshop",
+      "targets": {
+        "next": {
+          "x": 752.125,
+          "y": 1003,
+          "width": 44,
+          "height": 44,
+          "cx": 774.125,
+          "cy": 1025
+        }
+      }
+    },
+    "layout-bento": {
+      "file": "layout-bento.png",
+      "description": "Text bullets metrics and quote arranged in actual bento layout",
+      "targets": {}
+    },
+    "image-slide": {
+      "file": "image-slide.png",
+      "description": "Generated artwork in actual live presentation",
+      "targets": {
+        "image": {
+          "x": 774.234375,
+          "y": 326.28125,
+          "width": 881.765625,
+          "height": 561.59375,
+          "cx": 1215.1171875,
+          "cy": 607.078125
+        }
+      }
+    },
+    "image-expanded": {
+      "file": "image-expanded.png",
+      "description": "Actual image detail overlay opened",
+      "targets": {}
+    },
+    "layout-update": {
+      "file": "layout-update.png",
+      "description": "Actual business update layout, fictional Design Team",
+      "targets": {}
+    },
+    "layout-quote": {
+      "file": "layout-quote.png",
+      "description": "Actual quote slide",
+      "targets": {}
+    },
+    "layout-quiz": {
+      "file": "layout-quiz.png",
+      "description": "Actual quiz slide with link",
+      "targets": {}
+    },
+    "layout-activity": {
+      "file": "layout-activity.png",
+      "description": "Actual activity steps slide",
+      "targets": {}
+    },
+    "live-notes": {
+      "file": "live-notes.png",
+      "description": "Actual notes dialog and presentation toolbar",
+      "targets": {}
+    },
+    "story": {
+      "file": "story.png",
+      "description": "Actual Story scrolling view",
+      "targets": {}
+    },
+    "movie": {
+      "file": "movie.png",
+      "description": "Actual Movie group selection gallery",
+      "targets": {
+        "design": {
+          "x": 736.90625,
+          "y": 1013,
+          "width": 211.46875,
+          "height": 34,
+          "cx": 842.640625,
+          "cy": 1030
+        }
+      }
+    },
+    "timer-before": {
+      "file": "timer-before.png",
+      "description": "One-minute timer ready",
+      "targets": {
+        "start": {
+          "x": 694.609375,
+          "y": 744,
+          "width": 91.703125,
+          "height": 38,
+          "cx": 740.4609375,
+          "cy": 763
+        }
+      }
+    },
+    "timer-running": {
+      "file": "timer-running.png",
+      "description": "Timer running",
+      "targets": {
+        "pause": {
+          "x": 808.46875,
+          "y": 744,
+          "width": 98.890625,
+          "height": 38,
+          "cx": 857.9140625,
+          "cy": 763
+        }
+      }
+    },
+    "timer-paused-plus": {
+      "file": "timer-paused-plus.png",
+      "description": "Paused timer after adding thirty seconds",
+      "targets": {
+        "resume": {
+          "x": 694.609375,
+          "y": 744,
+          "width": 91.703125,
+          "height": 38,
+          "cx": 740.4609375,
+          "cy": 763
+        },
+        "plus": {
+          "x": 1136.953125,
+          "y": 744,
+          "width": 88.4375,
+          "height": 38,
+          "cx": 1181.171875,
+          "cy": 763
+        }
+      }
+    },
+    "offline": {
+      "file": "offline.png",
+      "description": "Exported HTML opened via file URL with network offline; no server required"
+    },
+    "live-content": {
+      "file": "live-content.png",
+      "description": "Text bullets metrics and quote arranged in actual bento layout",
+      "targets": {}
+    },
+    "story-scrolled": {
+      "file": "story-scrolled.png",
+      "description": "Actual Story scrolling view",
+      "targets": {}
+    }
+  },
+  "errors": []
+}

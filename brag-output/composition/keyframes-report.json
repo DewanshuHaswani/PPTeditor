@@ -1,0 +1,174 @@
+{
+  "project": "composition",
+  "runtime": "all",
+  "compositions": [
+    {
+      "composition": "index.html",
+      "source": "index.html",
+      "tweens": [
+        {
+          "id": "#editor-ui-cam-to-8200",
+          "target": "#editor-ui-cam",
+          "method": "to",
+          "start": 8.2,
+          "duration": 1.1,
+          "end": 9.3,
+          "shape": "flat",
+          "keyframes": [
+            {
+              "pct": 0,
+              "time": 8.2,
+              "properties": {
+                "scale": 1,
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "pct": 100,
+              "time": 9.3,
+              "properties": {
+                "scale": 1.35,
+                "x": -45,
+                "y": 115
+              }
+            }
+          ],
+          "path": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": -45,
+              "y": 115
+            }
+          ]
+        },
+        {
+          "id": "#editor-ui-cam-to-11400",
+          "target": "#editor-ui-cam",
+          "method": "to",
+          "start": 11.4,
+          "duration": 1.25,
+          "end": 12.65,
+          "shape": "flat",
+          "keyframes": [
+            {
+              "pct": 0,
+              "time": 11.4,
+              "properties": {
+                "scale": 1,
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "pct": 100,
+              "time": 12.65,
+              "properties": {
+                "scale": 1.08,
+                "x": 0,
+                "y": -10
+              }
+            }
+          ],
+          "path": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 0,
+              "y": -10
+            }
+          ]
+        }
+      ],
+      "traces": [
+        {
+          "target": "#editor-ui-cam",
+          "strokes": [
+            {
+              "id": "#editor-ui-cam-to-8200",
+              "start": 8.2,
+              "end": 9.3,
+              "keyframes": [
+                {
+                  "pct": 0,
+                  "time": 8.2,
+                  "properties": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                  }
+                },
+                {
+                  "pct": 100,
+                  "time": 9.3,
+                  "properties": {
+                    "scale": 1.35,
+                    "x": -45,
+                    "y": 115
+                  }
+                }
+              ],
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": -45,
+                  "y": 115
+                }
+              ]
+            },
+            {
+              "id": "#editor-ui-cam-to-11400",
+              "start": 11.4,
+              "end": 12.65,
+              "keyframes": [
+                {
+                  "pct": 0,
+                  "time": 11.4,
+                  "properties": {
+                    "scale": 1,
+                    "x": 0,
+                    "y": 0
+                  }
+                },
+                {
+                  "pct": 100,
+                  "time": 12.65,
+                  "properties": {
+                    "scale": 1.08,
+                    "x": 0,
+                    "y": -10
+                  }
+                }
+              ],
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 0,
+                  "y": -10
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "cssKeyframes": [],
+      "anime": []
+    }
+  ],
+  "_meta": {
+    "version": "0.8.125",
+    "latestVersion": "0.8.125",
+    "updateAvailable": false
+  }
+}

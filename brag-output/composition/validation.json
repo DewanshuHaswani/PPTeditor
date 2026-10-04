@@ -1,0 +1,42 @@
+{
+  "ok": true,
+  "browserSkipped": false,
+  "format": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "duration": 92
+  },
+  "checks": {
+    "lint": {
+      "errors": 0,
+      "warnings": 14
+    },
+    "runtime": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "layout": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "motion": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "contrast": {
+      "errors": 0,
+      "warnings": 0
+    }
+  },
+  "lintWarningCodes": [
+    "duplicate_media_discovery_risk",
+    "nested_structure_needs_subcomposition",
+    "timeline_track_too_dense"
+  ],
+  "visualReview": "All eleven scenes and offline proof inspected; title typing, notes crop and saved-disk toast confirmed on dedicated frames.",
+  "musicMix": "Default strength0.8 voice-aware carve against voiceover group;11 narration clips;7carve automation lanes plus bed fades.",
+  "registry": "ui-focus-zoom camera-servo primitive adapted to screenshot camera wrappers",
+  "snapshots": "snapshots/",
+  "keyframes": "keyframes-report.json"
+}
